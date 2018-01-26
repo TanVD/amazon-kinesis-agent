@@ -24,6 +24,8 @@ import com.amazon.kinesis.streaming.agent.processing.exceptions.DataConversionEx
 import com.amazon.kinesis.streaming.agent.processing.interfaces.IDataConverter;
 import com.amazon.kinesis.streaming.agent.processing.interfaces.IJSONPrinter;
 import com.amazon.kinesis.streaming.agent.processing.utils.ProcessingUtilsFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Build record as JSON object with a "metadata" key for arbitrary KV pairs
@@ -46,28 +48,34 @@ import com.amazon.kinesis.streaming.agent.processing.utils.ProcessingUtilsFactor
  */
 public class AddMetadataConverter implements IDataConverter {
 
-    private Object metadata;
+    private Map<String, Object> metadata;
     private final IJSONPrinter jsonProducer;
 
     public AddMetadataConverter(Configuration config) {
-      metadata = config.getConfigMap().get("metadata");
+      metadata = (Map<String, Object>) config.getConfigMap().get("metadata");
       jsonProducer = ProcessingUtilsFactory.getPrinter(config);
     }
 
     @Override
     public ByteBuffer convert(ByteBuffer data) throws DataConversionException {
 
-        final Map<String, Object> recordMap = new LinkedHashMap<String, Object>();
         String dataStr = ByteBuffers.toString(data, StandardCharsets.UTF_8);
 
-        if (dataStr.endsWith(NEW_LINE)) {
-            dataStr = dataStr.substring(0, (dataStr.length() - NEW_LINE.length()));
+        ObjectMapper mapper = new ObjectMapper();
+        TypeReference<LinkedHashMap<String, Object>> typeRef =
+                new TypeReference<LinkedHashMap<String, Object>>() {
+                };
+
+        LinkedHashMap<String, Object> dataObj;
+        try {
+            dataObj = mapper.readValue(dataStr, typeRef);
+        } catch (Exception ex) {
+            throw new DataConversionException("Error converting json source data to map", ex);
         }
 
-        recordMap.put("metadata", metadata);
-        recordMap.put("data", dataStr);
+        dataObj.putAll(metadata);
 
-        String dataJson = jsonProducer.writeAsString(recordMap) + NEW_LINE;
+        String dataJson = jsonProducer.writeAsString(dataObj) + NEW_LINE;
         return ByteBuffer.wrap(dataJson.getBytes(StandardCharsets.UTF_8));
     }
 
