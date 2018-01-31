@@ -2,8 +2,8 @@
 
 # Log files are in /var/log/aws-kinesis-agent/
 
-JAVA_START_HEAP="256m"
-JAVA_MAX_HEAP="512m"
+JAVA_START_HEAP="64m"
+JAVA_MAX_HEAP="128m"
 OOME_ARGS_DEFAULT="\"/bin/kill -9 %p\""
 OOME_ARGS="-XX:OnOutOfMemoryError=${OOME_ARGS:-$OOME_ARGS_DEFAULT}"
 
