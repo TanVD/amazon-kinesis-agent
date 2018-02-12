@@ -26,6 +26,7 @@ import com.amazon.kinesis.streaming.agent.processing.interfaces.IJSONPrinter;
 import com.amazon.kinesis.streaming.agent.processing.utils.ProcessingUtilsFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.joda.time.DateTime;
 
 /**
  * Build record as JSON object with a "metadata" key for arbitrary KV pairs
@@ -48,11 +49,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class AddMetadataConverter implements IDataConverter {
 
+    enum MetadataFunctions {
+        Time {
+            @Override
+            public String invoke() {
+                return Long.toString(DateTime.now().getMillis());
+            }
+        };
+
+        public abstract String invoke();
+    }
+
     private Map<String, Object> metadata;
+    private Map<String, String> functions;
     private final IJSONPrinter jsonProducer;
 
     public AddMetadataConverter(Configuration config) {
       metadata = (Map<String, Object>) config.getConfigMap().get("metadata");
+      functions = (Map<String, String>) config.getConfigMap().get("functions");
       jsonProducer = ProcessingUtilsFactory.getPrinter(config);
     }
 
@@ -74,6 +88,10 @@ public class AddMetadataConverter implements IDataConverter {
         }
 
         dataObj.putAll(metadata);
+
+        for (Map.Entry<String, String> function : functions.entrySet()) {
+            dataObj.put(function.getValue(), MetadataFunctions.valueOf(function.getKey()).invoke());
+        }
 
         String dataJson = jsonProducer.writeAsString(dataObj) + NEW_LINE;
         return ByteBuffer.wrap(dataJson.getBytes(StandardCharsets.UTF_8));
