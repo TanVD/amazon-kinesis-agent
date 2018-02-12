@@ -89,8 +89,10 @@ public class AddMetadataConverter implements IDataConverter {
 
         dataObj.putAll(metadata);
 
-        for (Map.Entry<String, String> function : functions.entrySet()) {
-            dataObj.put(function.getValue(), MetadataFunctions.valueOf(function.getKey()).invoke());
+        if (functions != null) {
+            for (Map.Entry<String, String> function : functions.entrySet()) {
+                dataObj.put(function.getValue(), MetadataFunctions.valueOf(function.getKey()).invoke());
+            }
         }
 
         String dataJson = jsonProducer.writeAsString(dataObj) + NEW_LINE;
