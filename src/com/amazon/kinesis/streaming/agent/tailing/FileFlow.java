@@ -1,28 +1,17 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
-
-import lombok.Getter;
-import lombok.ToString;
 
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.Constants;
@@ -35,6 +24,17 @@ import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStor
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Range;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
+
 /**
  * A class that represent a data flow consisting of a source and destination.
  * The source is a colletion of files to be tailed (represented by a {@link SourceFile}
@@ -59,31 +59,48 @@ public abstract class FileFlow<R extends IRecord> extends Configuration {
     public static final String DEFAULT_TRUNCATED_RECORD_TERMINATOR = String.valueOf(Constants.NEW_LINE);
     public static final String CONVERSION_OPTION_KEY = "dataProcessingOptions";
     public static final String FILE_FOOTER_PATTERN = "fileFooterPattern"; //If a line matches this pattern it stops processing the file
-    
+
     public static final Pattern NO_MATCH_REGEX = Pattern.compile("^\\b$"); //https://stackoverflow.com/questions/1723182/a-regex-that-will-never-be-matched-by-anything
 
-    @Getter protected final AgentContext agentContext;
-    @Getter protected final SourceFile sourceFile;
-    @Getter protected final int maxBufferSizeRecords;
-    @Getter protected final int maxBufferSizeBytes;
-    @Getter protected final long maxBufferAgeMillis;
-    @Getter protected final long waitOnFullPublishQueueMillis;
-    @Getter protected final long waitOnEmptyPublishQueueMillis;
-    @Getter protected final InitialPosition initialPosition;
-    @Getter protected final int skipHeaderLines;
-    @Getter protected FileTailer<R> tailer;
-    @Getter protected final byte[] recordTerminatorBytes;
-    @Getter protected ISplitter recordSplitter;
-    @Getter protected final long retryInitialBackoffMillis;
-    @Getter protected final long retryMaxBackoffMillis;
-    @Getter protected final int publishQueueCapacity;
-    @Getter protected final IDataConverter dataConverter;
-    @Getter protected final Pattern fileFooterPattern;
+    @Getter
+    protected final AgentContext agentContext;
+    @Getter
+    protected final SourceFile sourceFile;
+    @Getter
+    protected final int maxBufferSizeRecords;
+    @Getter
+    protected final int maxBufferSizeBytes;
+    @Getter
+    protected final long maxBufferAgeMillis;
+    @Getter
+    protected final long waitOnFullPublishQueueMillis;
+    @Getter
+    protected final long waitOnEmptyPublishQueueMillis;
+    @Getter
+    protected final InitialPosition initialPosition;
+    @Getter
+    protected final int skipHeaderLines;
+    @Getter
+    protected FileTailer<R> tailer;
+    @Getter
+    protected final byte[] recordTerminatorBytes;
+    @Getter
+    protected ISplitter recordSplitter;
+    @Getter
+    protected final long retryInitialBackoffMillis;
+    @Getter
+    protected final long retryMaxBackoffMillis;
+    @Getter
+    protected final int publishQueueCapacity;
+    @Getter
+    protected final IDataConverter dataConverter;
+    @Getter
+    protected final Pattern fileFooterPattern;
 
     protected FileFlow(AgentContext context, Configuration config) {
         super(config);
         this.agentContext = context;
-        
+
         sourceFile = buildSourceFile();
 
         maxBufferAgeMillis = readLong(MAX_BUFFER_AGE_MILLIS_KEY, getDefaultMaxBufferAgeMillis());
@@ -105,22 +122,22 @@ public abstract class FileFlow<R extends IRecord> extends Configuration {
         retryInitialBackoffMillis = readLong("retryInitialBackoffMillis", getDefaultRetryInitialBackoffMillis());
         retryMaxBackoffMillis = readLong("retryMaxBackoffMillis", getDefaultRetryMaxBackoffMillis());
         publishQueueCapacity = readInteger("publishQueueCapacity", getDefaultPublishQueueCapacity());
-        
+
         skipHeaderLines = readInteger("skipHeaderLines", 0);
-        
+
         String pattern = readString("multiLineStartPattern", null);
         recordSplitter = Strings.isNullOrEmpty(pattern) ? new SingleLineSplitter() : new RegexSplitter(pattern);
-        
+
         String footerPattern = readString(FILE_FOOTER_PATTERN, null);
-        
-        fileFooterPattern = Strings.isNullOrEmpty(footerPattern)? NO_MATCH_REGEX : Pattern.compile(footerPattern);
+
+        fileFooterPattern = Strings.isNullOrEmpty(footerPattern) ? NO_MATCH_REGEX : Pattern.compile(footerPattern);
 
         String terminatorConfig = readString("truncatedRecordTerminator", DEFAULT_TRUNCATED_RECORD_TERMINATOR);
         if (terminatorConfig == null || terminatorConfig.getBytes(StandardCharsets.UTF_8).length >= getMaxRecordSizeBytes()) {
             throw new ConfigurationException("Record terminator not specified or exceeds the maximum record size");
         }
         recordTerminatorBytes = terminatorConfig.getBytes(StandardCharsets.UTF_8);
-        
+
         List<Configuration> dataProcessingOptions = readList(CONVERSION_OPTION_KEY, Configuration.class, Collections.EMPTY_LIST);
         dataConverter = buildConverterChain(dataProcessingOptions);
     }
@@ -146,13 +163,19 @@ public abstract class FileFlow<R extends IRecord> extends Configuration {
     }
 
     public abstract String getId();
+
     public abstract String getDestination();
+
     public abstract int getMaxRecordSizeBytes();
+
     public abstract int getPerRecordOverheadBytes();
+
     public abstract int getPerBufferOverheadBytes();
+
     protected abstract FileTailer<R> createNewTailer(
             FileCheckpointStore checkpoints,
             ExecutorService sendingExecutor) throws IOException;
+
     protected abstract AsyncPublisherService<R> getPublisher(
             FileCheckpointStore checkpoints,
             ExecutorService sendingExecutor);
@@ -160,17 +183,17 @@ public abstract class FileFlow<R extends IRecord> extends Configuration {
     protected SourceFile buildSourceFile() {
         return new SourceFile(this, readString(FILE_PATTERN_KEY));
     }
-    
+
     protected IDataConverter buildConverterChain(List<Configuration> conversionOptions) throws ConfigurationException {
         if (conversionOptions == null || conversionOptions.isEmpty())
             return null;
-        
+
         List<IDataConverter> converters = new LinkedList<IDataConverter>();
-        
+
         for (Configuration conversionOption : conversionOptions) {
             converters.add(ProcessingUtilsFactory.getDataConverter(conversionOption));
         }
-        
+
         try {
             return new AgentDataConverterChain(converters);
         } catch (IllegalArgumentException e) {
@@ -179,7 +202,9 @@ public abstract class FileFlow<R extends IRecord> extends Configuration {
     }
 
     protected abstract SourceFileTracker buildSourceFileTracker() throws IOException;
+
     protected abstract IParser<R> buildParser();
+
     protected abstract ISender<R> buildSender();
 
     public abstract int getParserBufferSize();
@@ -187,17 +212,29 @@ public abstract class FileFlow<R extends IRecord> extends Configuration {
     // TODO: Instead of this plethora of abstract getters, consider using
     //       tables for defaults and validation ranges.
     protected abstract Range<Long> getWaitOnEmptyPublishQueueMillisValidRange();
+
     protected abstract long getDefaultWaitOnEmptyPublishQueueMillis();
+
     protected abstract Range<Long> getWaitOnPublishQueueMillisValidRange();
+
     protected abstract long getDefaultWaitOnPublishQueueMillis();
+
     protected abstract Range<Integer> getMaxBufferSizeBytesValidRange();
+
     protected abstract int getDefaultMaxBufferSizeBytes();
+
     protected abstract Range<Integer> getBufferSizeRecordsValidRange();
+
     protected abstract int getDefaultBufferSizeRecords();
+
     protected abstract Range<Long> getMaxBufferAgeMillisValidRange();
+
     protected abstract long getDefaultMaxBufferAgeMillis();
+
     protected abstract long getDefaultRetryInitialBackoffMillis();
+
     protected abstract long getDefaultRetryMaxBackoffMillis();
+
     protected abstract int getDefaultPublishQueueCapacity();
 
     public static enum InitialPosition {

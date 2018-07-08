@@ -1,25 +1,24 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.metrics;
 
+import com.amazon.kinesis.streaming.agent.Logging;
+import org.slf4j.Logger;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
-
-import org.slf4j.Logger;
-
-import com.amazon.kinesis.streaming.agent.Logging;
 
 /**
  * A CWPublisherRunnable contains the logic of when to publish metrics.
@@ -52,22 +51,22 @@ public class CWPublisherRunnable<KeyType> implements Runnable {
      *
      * @param metricsPublisher publishes metrics
      * @param bufferTimeMillis time between publishing metrics
-     * @param maxQueueSize max size of metrics to publish
-     * @param batchSize size of batch that can be published at a time
+     * @param maxQueueSize     max size of metrics to publish
+     * @param batchSize        size of batch that can be published at a time
      */
 
     public CWPublisherRunnable(ICWMetricsPublisher<KeyType> metricsPublisher,
-            long bufferTimeMillis,
-            int maxQueueSize,
-            int batchSize) {
+                               long bufferTimeMillis,
+                               int maxQueueSize,
+                               int batchSize) {
         this(metricsPublisher, bufferTimeMillis, maxQueueSize, batchSize, 0);
     }
 
     public CWPublisherRunnable(ICWMetricsPublisher<KeyType> metricsPublisher,
-            long bufferTimeMillis,
-            int maxQueueSize,
-            int batchSize,
-            int maxJitter) {
+                               long bufferTimeMillis,
+                               int maxQueueSize,
+                               int batchSize,
+                               int maxJitter) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Constructing CWPublisherRunnable with maxBufferTimeMillis {} maxQueueSize {} batchSize {} maxJitter {}",
                     bufferTimeMillis,

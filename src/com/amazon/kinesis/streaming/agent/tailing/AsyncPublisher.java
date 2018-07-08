@@ -1,17 +1,22 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
+
+import com.amazon.kinesis.streaming.agent.AgentContext;
+import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Stopwatch;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -19,11 +24,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Stopwatch;
 
 /**
  * A publisher that buffers records into an {@link PublishingQueue}, and can
@@ -42,13 +42,12 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
     private final AtomicLong totalRejectedSendTasks = new AtomicLong();
 
     /**
-     *
      * @param agentContext
      * @param flow
      * @param checkpoints
      * @param sender
      * @param sendingExecutor The executor that will run the async send
-     *        requests.
+     *                        requests.
      */
     public AsyncPublisher(
             AgentContext agentContext,
@@ -65,7 +64,7 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
 
     /**
      * @return {@code false} if there are any records queued for sending or
-     *         currently being sent (e.g. asynchronously), else {@code true}.
+     * currently being sent (e.g. asynchronously), else {@code true}.
      */
     public synchronized boolean isIdle() {
         return queue.totalRecords() == 0 &&
@@ -82,16 +81,16 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
      * @param timeout Use a value {@code <= 0} to wait indefinitely.
      * @param unit
      * @return {@code true} if idle state was reached before the timeout
-     *         expired, or {@code false} if idle state was not successfully
-     *         reached.
+     * expired, or {@code false} if idle state was not successfully
+     * reached.
      */
     public boolean waitForIdle(long timeout, TimeUnit unit) {
         Stopwatch timer = Stopwatch.createStarted();
-        while(!isIdle()) {
+        while (!isIdle()) {
             long remaining = timeout > 0 ?
                     (unit.toMillis(timeout) - timer.elapsed(TimeUnit.MILLISECONDS))
                     : Long.MAX_VALUE;
-            if(remaining <= 0)
+            if (remaining <= 0)
                 return false;
             long sleepTime = Math.min(MAX_SPIN_WAIT_TIME_MILLIS, remaining);
             logger.trace("{}: Waiting for idle state. Sleeping {}ms. {}", name(), sleepTime, toString());
@@ -135,7 +134,7 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
             sendingExecutor.execute(task);
             onSendAccepted(buffer);
             return true;
-        } catch(RejectedExecutionException e) {
+        } catch (RejectedExecutionException e) {
             onSendRejected(buffer);
             return false;
         }
@@ -148,6 +147,7 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
 
     /**
      * This method should not raise any exceptions.
+     *
      * @param buffer
      */
     protected synchronized void onSendAccepted(RecordBuffer<R> buffer) {
@@ -158,6 +158,7 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
 
     /**
      * This method should not raise any exceptions.
+     *
      * @param buffer
      */
     protected synchronized void onSendRejected(RecordBuffer<R> buffer) {
@@ -169,6 +170,7 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
 
     /**
      * This method should not raise any exceptions.
+     *
      * @param buffer
      */
     protected synchronized void onSendTaskCompleted(RecordBuffer<R> buffer) {
@@ -185,7 +187,7 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
 
     @Override
     protected synchronized boolean onSendPartialSuccess(RecordBuffer<R> buffer, BufferSendResult<R> result) {
-        double failure = (double)buffer.sizeRecords() / result.getOriginalRecordCount();
+        double failure = (double) buffer.sizeRecords() / result.getOriginalRecordCount();
         throttler.onSendPartialSuccess(failure);
         try {
             return super.onSendPartialSuccess(buffer, result);
@@ -211,10 +213,10 @@ class AsyncPublisher<R extends IRecord> extends SimplePublisher<R> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getSimpleName())
-          .append("(")
-          .append("queue=").append(queue)
-          .append(",activeSendTasks=").append(activeSendTasks.get())
-          .append(")");
+                .append("(")
+                .append("queue=").append(queue)
+                .append(",activeSendTasks=").append(activeSendTasks.get())
+                .append(")");
         return sb.toString();
     }
 

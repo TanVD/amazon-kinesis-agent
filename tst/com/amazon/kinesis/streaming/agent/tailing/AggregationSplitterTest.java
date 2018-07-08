@@ -35,7 +35,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenOneCompleteLineWithinRecordSizeHint() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AA\n"
         };
         buffer = ByteBuffers.fromString(String.join("", lines), StandardCharsets.US_ASCII);
@@ -47,7 +47,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenMultipleCompleteLinesWithinRecordSizeHint() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AA\n",
                 "BB\n",
                 "CC\n"
@@ -61,7 +61,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenOneIncompleteLineWithinRecordSizeHint() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AA"
         };
         buffer = ByteBuffers.fromString(String.join("", lines), StandardCharsets.US_ASCII);
@@ -72,7 +72,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenMultipleCompleteLinesAndOneIncompleteLineWithinRecordSizeHint() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AA\n",
                 "BB\n",
                 "CC"
@@ -86,7 +86,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenOneCompleteLineBeyondRecordSizeHint() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AAAAAAAAAAAA\n"
         };
         buffer = ByteBuffers.fromString(String.join("", lines), StandardCharsets.US_ASCII);
@@ -98,7 +98,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenMultipleCompleteLinesBeyondRecordSizeHintIndividually() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AAAAAAAAAAAA\n",
                 "BBBBBBBBBBBB\n",
                 "CCCCCCCCCCCC\n"
@@ -114,7 +114,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenMultipleCompleteLinesBeyondRecordSizeHintCollectively() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AAAA\n",
                 "BBBB\n",
                 "CCCC\n"
@@ -129,7 +129,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenOneIncompleteLineBeyondRecordSizeHint() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AAAAAAAAAAAA"
         };
         buffer = ByteBuffers.fromString(String.join("", lines), StandardCharsets.US_ASCII);
@@ -140,7 +140,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenMultipleCompleteLinesAndOneIncompleteLineBeyondRecordSizeHintIndividually() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AAAAAAAAAAAA\n",
                 "BBBBBBBBBBBB\n",
                 "CCCCCCCCCCCC"
@@ -155,7 +155,7 @@ public class AggregationSplitterTest extends TestBase {
 
     @Test
     public void testLocateNextRecordGivenMultipleCompleteLinesAndOneIncompleteLineBeyondRecordSizeHintCollectively() {
-        final String[] lines = new String[] {
+        final String[] lines = new String[]{
                 "AAAA\n",
                 "BBBB\n",
                 "CCCC"

@@ -3,25 +3,19 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import com.amazon.kinesis.streaming.agent.AgentContext;
+import com.amazon.kinesis.streaming.agent.config.Configuration;
+import com.amazon.kinesis.streaming.agent.tailing.*;
+import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
+import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase.FileRotatorFactory;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestFiles;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.config.Configuration;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlowFactory;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseConstants;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseFileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
-import com.amazon.kinesis.streaming.agent.tailing.ISender;
-import com.amazon.kinesis.streaming.agent.tailing.SourceFile;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase.FileRotatorFactory;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestFiles;
 
 public class TestAgentContext extends AgentContext {
     public TestAgentContext(
@@ -75,7 +69,7 @@ public class TestAgentContext extends AgentContext {
         }
 
         private FirehoseFileFlow buildFirehoseFileFlow(AgentContext context, Configuration config, final FileRotator rotator,
-                final Path outputFile) {
+                                                       final Path outputFile) {
             FirehoseFileFlow flow = new FirehoseFileFlow(context, config) {
                 @Override
                 protected SourceFile buildSourceFile() {
@@ -92,27 +86,27 @@ public class TestAgentContext extends AgentContext {
     }
 
     public void startFileGenerators() {
-        for(RotatingFileGenerator gen : ((TestFileFlowFactory)this.fileFlowFactory).fileGenerators.values()) {
+        for (RotatingFileGenerator gen : ((TestFileFlowFactory) this.fileFlowFactory).fileGenerators.values()) {
             gen.startAsync();
             gen.awaitRunning();
         }
     }
 
     public void stopFileGenerators() {
-        for(RotatingFileGenerator gen : ((TestFileFlowFactory)this.fileFlowFactory).fileGenerators.values()) {
+        for (RotatingFileGenerator gen : ((TestFileFlowFactory) this.fileFlowFactory).fileGenerators.values()) {
             gen.stopAsync();
             gen.awaitTerminated();
         }
     }
 
     public Path[] getInputFiles(FileFlow<?> flow) {
-        FileRotator rotator = ((TestFileFlowFactory)this.fileFlowFactory).rotators.get(flow);
+        FileRotator rotator = ((TestFileFlowFactory) this.fileFlowFactory).rotators.get(flow);
         ArrayList<Path> input = new ArrayList<>(rotator.getInputFiles());
         input.addAll(rotator.getDeletedFiles());
         return input.toArray(new Path[input.size()]);
     }
 
     public Path getOutputFile(FileFlow<?> flow) {
-        return ((TestFileFlowFactory)this.fileFlowFactory).outputFiles.get(flow);
+        return ((TestFileFlowFactory) this.fileFlowFactory).outputFiles.get(flow);
     }
 }

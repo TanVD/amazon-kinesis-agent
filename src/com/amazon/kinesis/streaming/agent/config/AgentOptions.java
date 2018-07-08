@@ -1,48 +1,45 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.config;
 
-import java.io.File;
-
-import lombok.Getter;
-
-import org.apache.commons.lang3.ArrayUtils;
-
-import com.beust.jcommander.IParameterValidator;
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterException;
-import com.beust.jcommander.Parameters;
+import com.beust.jcommander.*;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Range;
+import lombok.Getter;
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.io.File;
 
 @Parameters(separators = "=")
 public class AgentOptions {
 
     private static final String DEFAULT_CONFIG_FILE = "/etc/aws-kinesis/agent.json";
-    private static final String[] VALID_LOG_LEVELS = { "TRACE", "DEBUG", "INFO", "WARN", "ERROR" };
+    private static final String[] VALID_LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR"};
 
-    @Parameter(names = { "--configuration", "-c" }, description = "Path to the configuration file for the agent.", validateWith = FileReadableValidator.class)
-    @Getter String configFile = DEFAULT_CONFIG_FILE;
+    @Parameter(names = {"--configuration", "-c"}, description = "Path to the configuration file for the agent.", validateWith = FileReadableValidator.class)
+    @Getter
+    String configFile = DEFAULT_CONFIG_FILE;
 
-    @Parameter(names = { "--log-file", "-l" }, description = "Path to the agent's log file.")
-    @Getter String logFile = null;
+    @Parameter(names = {"--log-file", "-l"}, description = "Path to the agent's log file.")
+    @Getter
+    String logFile = null;
 
-    @Parameter(names = { "--log-level", "-L" }, description = "Log level. Can be one of: TRACE,DEBUG,INFO,WARN,ERROR.", validateWith = LogLevelValidator.class)
-    @Getter String logLevel = null;
+    @Parameter(names = {"--log-level", "-L"}, description = "Log level. Can be one of: TRACE,DEBUG,INFO,WARN,ERROR.", validateWith = LogLevelValidator.class)
+    @Getter
+    String logLevel = null;
 
-    @Parameter(names = { "--help", "-h" }, help = true, description = "Display this help message")
+    @Parameter(names = {"--help", "-h"}, help = true, description = "Display this help message")
     Boolean help;
 
     public static AgentOptions parse(String[] args) {

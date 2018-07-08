@@ -1,27 +1,17 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-
-import lombok.Getter;
-
-import org.joda.time.Duration;
-import org.slf4j.Logger;
 
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.IHeartbeatProvider;
@@ -36,6 +26,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.AbstractExecutionThreadService;
 import com.google.common.util.concurrent.AbstractScheduledService;
+import lombok.Getter;
+import org.joda.time.Duration;
+import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Component responsible for tailing a single file, parsing into records and
@@ -49,13 +47,16 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
     private static final int MAX_SPIN_WAIT_TIME_MILLIS = 1000;
     private static final Logger LOGGER = Logging.getLogger(FileTailer.class);
 
-    @Getter private final AgentContext agentContext;
-    @Getter private final FileFlow<R> flow;
+    @Getter
+    private final AgentContext agentContext;
+    @Getter
+    private final FileFlow<R> flow;
     private final String serviceName;
     protected final SourceFileTracker fileTracker;
     protected final IParser<R> parser;
     @VisibleForTesting
-    @Getter private final FileCheckpointStore checkpoints;
+    @Getter
+    private final FileCheckpointStore checkpoints;
     protected final AsyncPublisherService<R> publisher;
 
     protected long lastStatusReportTime = 0;
@@ -69,11 +70,11 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
     private final AtomicLong recordsTruncated = new AtomicLong();
 
     public FileTailer(AgentContext agentContext,
-            FileFlow<R> flow,
-            SourceFileTracker fileTracker,
-            AsyncPublisherService<R> publisher,
-            IParser<R> parser,
-            FileCheckpointStore checkpoints) throws IOException {
+                      FileFlow<R> flow,
+                      SourceFileTracker fileTracker,
+                      AsyncPublisherService<R> publisher,
+                      IParser<R> parser,
+                      FileCheckpointStore checkpoints) throws IOException {
         super();
         this.agentContext = agentContext;
         this.flow = flow;
@@ -116,7 +117,7 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
         do {
             if (0 == runOnce() && !isNewFile) {
                 // Sleep only if the previous run did not process any records
-                if(isRunning() && minTimeBetweenFilePollsMillis > 0) {
+                if (isRunning() && minTimeBetweenFilePollsMillis > 0) {
                     try {
                         Thread.sleep(minTimeBetweenFilePollsMillis);
                     } catch (InterruptedException e) {
@@ -134,7 +135,7 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
 
     @VisibleForTesting
     public synchronized void initialize() throws IOException {
-        if(isInitialized)
+        if (isInitialized)
             return;
         FileCheckpoint cp = checkpoints.getCheckpointForFlow(flow);
         if (cp != null) {
@@ -153,7 +154,7 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
         }
         // SANITYCHECK: can remove when done debugging
         Preconditions.checkState(fileTracker.getCurrentOpenFile() == parser.getCurrentFile());
-        if(fileTracker.getCurrentOpenFile() != null) {
+        if (fileTracker.getCurrentOpenFile() != null) {
             Preconditions.checkState(fileTracker.getCurrentOpenFile().getCurrentOffset() == parser.getCurrentFile().getCurrentOffset());
         }
         isNewFile = parser.isParsing();
@@ -162,8 +163,8 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
 
     /**
      * @return {@code false} if there are any records queued for sending or
-     *         currently being sent (e.g. asynchronously), or if there are more
-     *         data pending in files, else {@code true}.
+     * currently being sent (e.g. asynchronously), or if there are more
+     * data pending in files, else {@code true}.
      */
     public synchronized boolean isIdle() {
         try {
@@ -183,16 +184,16 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
      * @param timeout Use a value {@code <= 0} to wait indefinitely.
      * @param unit
      * @return {@code true} if idle state was reached before the timeout
-     *         expired, or {@code false} if idle state was not successfully
-     *         reached.
+     * expired, or {@code false} if idle state was not successfully
+     * reached.
      */
     public boolean waitForIdle(long timeout, TimeUnit unit) {
         Stopwatch timer = Stopwatch.createStarted();
-        while(!isIdle()) {
+        while (!isIdle()) {
             long remaining = timeout > 0 ?
                     (unit.toMillis(timeout) - timer.elapsed(TimeUnit.MILLISECONDS))
                     : Long.MAX_VALUE;
-            if(remaining <= 0)
+            if (remaining <= 0)
                 return false;
             long sleepTime = Math.min(MAX_SPIN_WAIT_TIME_MILLIS, remaining);
             LOGGER.trace("{}: Waiting IDLE. Sleeping {}ms. {}", serviceName(), sleepTime, toString());
@@ -234,7 +235,7 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
     protected synchronized int processRecords() {
         int processed = 0;
         try {
-            if(!updateRecordParser(false)) {
+            if (!updateRecordParser(false)) {
                 LOGGER.trace("{}: There's no file being tailed.", serviceName());
                 return 0;
             }
@@ -242,7 +243,7 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
             if (parser.isAtEndOfCurrentFile()) {
                 // We think we reached the end of the current file...
                 LOGGER.debug("{}: We reached end of file {}.", serviceName(), parser.getCurrentFile());
-                if(isRunning() && fileTracker.onEndOfCurrentFile()) {
+                if (isRunning() && fileTracker.onEndOfCurrentFile()) {
                     LOGGER.debug("{}: Switching to next file {}.", serviceName(), fileTracker.getCurrentOpenFile());
                     // fileTracker.onEndOfCurrentFile() returns true if the current
                     // file has changed. In that case, point to the new file without
@@ -265,14 +266,14 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
         R record = pendingRecord == null ? parser.readRecord() : pendingRecord;
         pendingRecord = null;
         int processed = 0;
-        while(record != null) {
-        	if (record.length() > flow.getMaxRecordSizeBytes()) {
+        while (record != null) {
+            if (record.length() > flow.getMaxRecordSizeBytes()) {
                 record.truncate();
                 recordsTruncated.incrementAndGet();
                 LOGGER.warn("{}: Truncated a record in {}, because it exceeded the the configured max record size: {}", serviceName(), parser.getCurrentFile(), flow.getMaxRecordSizeBytes());
             }
             // Process a slice of records, and then check if we've been asked to stop
-            if(isRunning() && publisher.publishRecord(record)) {
+            if (isRunning() && publisher.publishRecord(record)) {
                 ++processed;
                 // Read the next record
                 record = parser.readRecord();
@@ -290,8 +291,8 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
 
     /**
      * @return {@code true} if we suspect there's more data in current file, or
-     *         if there are newer files waiting to be tailed, {@code false}
-     *         otherwise.
+     * if there are newer files waiting to be tailed, {@code false}
+     * otherwise.
      * @throws IOException
      */
     public synchronized boolean moreInputPending() throws IOException {
@@ -313,7 +314,7 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
             if (currentFile != null) {
                 result += currentFile.getChannel().size() - currentFile.getChannel().position();
             }
-            for(TrackedFile f : fileTracker.getPendingFiles()) {
+            for (TrackedFile f : fileTracker.getPendingFiles()) {
                 result += f.getSize();
             }
             return result;
@@ -328,30 +329,29 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
     }
 
     /**
-     *
      * @param forceRefresh If {@code true}, the file tracker will force a
-     *        refresh of the current snapshot.
+     *                     refresh of the current snapshot.
      * @return {@code true} if there's a file currently being parser, and
-     *         {@code false} otherwise.
+     * {@code false} otherwise.
      * @throws IOException
      */
     protected synchronized boolean updateRecordParser(boolean forceRefresh) throws IOException {
-        if(isRunning()) {
+        if (isRunning()) {
             boolean resetParsing = false;
             boolean refreshed = false;
             long elapsedSinceLastRefresh = System.currentTimeMillis() - fileTracker.getLastRefreshTimestamp();
             // Refresh sparingly to save CPU cycles and unecessary IO...
-            if(forceRefresh
+            if (forceRefresh
                     || elapsedSinceLastRefresh >= maxTimeBetweenFileTrackerRefreshMillis
                     || fileTracker.mustRefresh()) {
                 LOGGER.trace("{} is refreshing current tailed file.", serviceName());
-                if(fileTracker.getLastRefreshTimestamp() > 0)
+                if (fileTracker.getLastRefreshTimestamp() > 0)
                     LOGGER.trace("{}: Time since last refresh: {}", serviceName(), Duration.millis(elapsedSinceLastRefresh));
                 resetParsing = !fileTracker.refresh();
                 refreshed = true;
             }
             // Only update the parser if something changed
-            if(refreshed || (!parser.isParsing() && fileTracker.getCurrentOpenFile() != null)) {
+            if (refreshed || (!parser.isParsing() && fileTracker.getCurrentOpenFile() != null)) {
                 TrackedFile currentFile = parser.getCurrentFile();
                 TrackedFile newFile = fileTracker.getCurrentOpenFile();
                 if (LOGGER.isDebugEnabled()) {
@@ -366,7 +366,7 @@ public class FileTailer<R extends IRecord> extends AbstractExecutionThreadServic
                         LOGGER.debug("{}: Found file to tail: {}", serviceName(), newFile);
                 }
                 if (resetParsing) {
-                    if(currentFile != null) {
+                    if (currentFile != null) {
                         LOGGER.warn("{}: Parsing was reset when switching to new file {} (from {})!", serviceName(), newFile, currentFile);
                     }
                     parser.switchParsingToFile(newFile);

@@ -3,12 +3,12 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
 
 /**
  * Unit tests for {@link CopyFileRotator}.
@@ -19,7 +19,7 @@ public class CopyFileRotatorTest extends FileRotatorTestBase {
         return new CopyFileRotator(root, prefix);
     }
 
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testLatestFileSizeDoesNotDecreaseAfterRotation() throws IOException {
         FileRotator rotator = getFileRotator();
         rotator.rotate(2);
@@ -32,7 +32,7 @@ public class CopyFileRotatorTest extends FileRotatorTestBase {
 
 
     @Override
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testGetMaxInputFileIndex() throws IOException {
         FileRotator rotator = getFileRotator();
         Assert.assertEquals(rotator.getMaxInputFileIndex(), -1);

@@ -3,19 +3,16 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.testng.Assert.assertEquals;
-
-import java.util.HashMap;
-
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import org.testng.annotations.Test;
+
+import java.util.HashMap;
 
 public class FirehoseFileFlowTest extends FileFlowTest<FirehoseFileFlow> {
 
-	@Test
+    @Test
     public void testFirehoseConfigurationDefaults() {
         AgentContext context = TestUtils.getTestAgentContext();
         FirehoseFileFlow ff = buildFileFlow(context, getConfiguration("/tmp/testfile.log.*", "testdes"));
@@ -44,13 +41,13 @@ public class FirehoseFileFlowTest extends FileFlowTest<FirehoseFileFlow> {
         assertEquals(ff2.getRecordSplitter().getClass(), SingleLineSplitter.class);
     }
 
-	@Override
-	protected String getDestinationKey() {
-		return FirehoseConstants.DESTINATION_KEY;
-	}
+    @Override
+    protected String getDestinationKey() {
+        return FirehoseConstants.DESTINATION_KEY;
+    }
 
-	@Override
-	protected FirehoseFileFlow buildFileFlow(AgentContext context, Configuration config) {
-		return new FirehoseFileFlow(context, config);
-	}
+    @Override
+    protected FirehoseFileFlow buildFileFlow(AgentContext context, Configuration config) {
+        return new FirehoseFileFlow(context, config);
+    }
 }

@@ -1,32 +1,30 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
+
+import com.amazon.kinesis.streaming.agent.Logging;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import lombok.Getter;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import lombok.Getter;
-
-import org.slf4j.Logger;
-
-import com.amazon.kinesis.streaming.agent.Logging;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
 
 /**
  * Provides backoffs that increase exponentially (up to a max) in response to
@@ -36,19 +34,18 @@ import com.google.common.base.Stopwatch;
  * random percentage &lt;= to the jitter percentage specified. Setting the
  * jitter percentage to 0.0 will disable jitter entirely (not recommended in
  * production).
- *
+ * <p>
  * After a number {@code FAILURES} of successive failures, the backoff
  * induced will be within:
  * {@code min(MAX_BACKOFF, (FACTOR ^ FAILURES) x INITIAL_BACKOFF) +/- JITTER}.
- *
+ * <p>
  * When a send operation fails (partially or completely), {@code FAILURES} is
  * incremented by 1. When a send operation succeeds, {@code FAILURES} is
  * reduced (divided) by another factor ({@code RECOVERY}) until it reaches 0.
- *
+ * <p>
  * A publisher can also signal backpressure calling {@link #onSendRejected()}
  * which will be followed by <em>at least</em> a single backoff of duration
  * {@code INITIAL_BACKOFF +/- JITTER}.
- *
  */
 public class AsyncPublisherThrottler<R extends IRecord> {
     static final double DEFAULT_BACKOFF_FACTOR = 2.0;
@@ -60,23 +57,46 @@ public class AsyncPublisherThrottler<R extends IRecord> {
 
     private static final Logger LOGGER = Logging.getLogger(AsyncPublisherThrottler.class);
 
-    /** initial backoff in milliseconds */
-    @Getter private final long initialBackoffMillis;
-    /** maximum dedlay in milliseconds */
-    @Getter private final long maxBackoffMillis;
-    /** backoff increase factor */
-    @Getter private final double backoffFactor;
-    /** factor for  **/
-    @Getter private final double recoveryFactor;
-    /** jitter factor in percentage **/
-    @Getter private final double jitter;
-    /** number of consecutive failures */
+    /**
+     * initial backoff in milliseconds
+     */
+    @Getter
+    private final long initialBackoffMillis;
+    /**
+     * maximum dedlay in milliseconds
+     */
+    @Getter
+    private final long maxBackoffMillis;
+    /**
+     * backoff increase factor
+     */
+    @Getter
+    private final double backoffFactor;
+    /**
+     * factor for
+     **/
+    @Getter
+    private final double recoveryFactor;
+    /**
+     * jitter factor in percentage
+     **/
+    @Getter
+    private final double jitter;
+    /**
+     * number of consecutive failures
+     */
     private double failures;
-    /** whether or not backpressure has been signaled to this class */
+    /**
+     * whether or not backpressure has been signaled to this class
+     */
     private double rejections;
-    /** the publisher that's using this instance */
+    /**
+     * the publisher that's using this instance
+     */
     private final AsyncPublisher<R> publisher;
-    /** flag to abort a backoff if a success was signaled in parallel */
+    /**
+     * flag to abort a backoff if a success was signaled in parallel
+     */
     private volatile boolean abortBackoff = false;
 
     private final AtomicLong totalBackoffTime = new AtomicLong();
@@ -85,31 +105,31 @@ public class AsyncPublisherThrottler<R extends IRecord> {
     /**
      * Applies the default backoff factor, recovery factor and jitter.
      *
-     * @param publisher the publisher that's using this instance
+     * @param publisher            the publisher that's using this instance
      * @param initialBackoffMillis initial backoff in milliseconds
-     * @param maxBackoffMillis maximum backoff in milliseconds
+     * @param maxBackoffMillis     maximum backoff in milliseconds
      */
     public AsyncPublisherThrottler(AsyncPublisher<R> publisher,
-            long initialBackoffMillis, long maxBackoffMillis) {
+                                   long initialBackoffMillis, long maxBackoffMillis) {
         this(publisher, initialBackoffMillis, maxBackoffMillis, DEFAULT_BACKOFF_FACTOR,
                 DEFAULT_JITTER_PERCENT, DEFAULT_RECOVERY_FACTOR);
     }
 
     /**
-     * @param publisher the publisher that's using this instance
+     * @param publisher            the publisher that's using this instance
      * @param initialBackoffMillis initial backoff in milliseconds; must be
-     *         &gt;= 0
-     * @param maxBackoffMillis maximum backoff in milliseconds; must be &gt;= 0
-     * @param backoffFactor backoff factor; must be &gt;= 1.0
-     * @param jitter maximum percentage of random jitter; setting the jitter
-     *         percentage to 0.0 will disable jitter entirely (not recommended
-     *         in production); must be between 0.0 and 1.0
-     * @param recoveryFactory factor by which to divide failure count in case of
-     *         success, to yield measured, slow recovery; must be &gt;= 2.0
+     *                             &gt;= 0
+     * @param maxBackoffMillis     maximum backoff in milliseconds; must be &gt;= 0
+     * @param backoffFactor        backoff factor; must be &gt;= 1.0
+     * @param jitter               maximum percentage of random jitter; setting the jitter
+     *                             percentage to 0.0 will disable jitter entirely (not recommended
+     *                             in production); must be between 0.0 and 1.0
+     * @param recoveryFactory      factor by which to divide failure count in case of
+     *                             success, to yield measured, slow recovery; must be &gt;= 2.0
      */
     public AsyncPublisherThrottler(AsyncPublisher<R> publisher,
-            long initialBackoffMillis, long maxBackoffMillis,
-            double backoffFactor, double jitter, double recoveryFactory) {
+                                   long initialBackoffMillis, long maxBackoffMillis,
+                                   double backoffFactor, double jitter, double recoveryFactory) {
         Preconditions.checkArgument(jitter <= 1.0);
         Preconditions.checkArgument(jitter >= 0.0);
         Preconditions.checkArgument(backoffFactor >= 1.0);
@@ -171,13 +191,12 @@ public class AsyncPublisherThrottler<R extends IRecord> {
      * returned by {@link #getNextBackoff()}. If a call to
      * {@link #onSendSuccess()} is received after sleep has started, sleep is
      * interrupted and this method returns immediately after.
-     * @return
      *
      * @return the actual time spent sleeping in milliseconds.
      */
     public long backoff() {
         long delay = 0;
-        synchronized(this) {
+        synchronized (this) {
             delay = getNextBackoff();
             if (delay > 0) {
                 LOGGER.debug("{}: Backing off for {} millis (failures: {}, rejections: {})...",
@@ -221,21 +240,21 @@ public class AsyncPublisherThrottler<R extends IRecord> {
 
     /**
      * @return 0 if healthy ({@code failures == 0}), or the current
-     *         backoff given current state accoding to the formula
-     *         {@code BACKOFF = min(MAX_BACKOFF, F^MULTIPLIER x INITIAL_BACKOFF)},
-     *         with additional randomized jitter within
-     *         {@code +/- BACKOFF x JITTER}.
+     * backoff given current state accoding to the formula
+     * {@code BACKOFF = min(MAX_BACKOFF, F^MULTIPLIER x INITIAL_BACKOFF)},
+     * with additional randomized jitter within
+     * {@code +/- BACKOFF x JITTER}.
      */
     @VisibleForTesting
     synchronized long getNextBackoff() {
-        if(getFailures() == 0 && getRejections() == 0) {
+        if (getFailures() == 0 && getRejections() == 0) {
             return 0;
         } else {
             // When backpressure exists, or we're yielding, then power = 0 and backoff = initialBackoffMillis
             int power = Math.max(0, getFailures() - 1);
             long delay = (long) Math.min(maxBackoffMillis,
                     initialBackoffMillis * Math.pow(backoffFactor, power));
-            if(jitter > 0.0) {
+            if (jitter > 0.0) {
                 double jitterFactor = 1 + ThreadLocalRandom.current().nextDouble(-1, 1) * jitter;
                 delay *= jitterFactor;
             }

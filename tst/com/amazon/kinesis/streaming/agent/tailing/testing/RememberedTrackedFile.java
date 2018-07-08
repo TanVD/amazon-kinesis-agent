@@ -3,15 +3,15 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import lombok.Getter;
-import lombok.ToString;
 import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.google.common.base.Throwables;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * A class that encapsulates a snapshot of the state of a file at a
@@ -21,9 +21,12 @@ import com.google.common.base.Throwables;
 public class RememberedTrackedFile extends TrackedFile {
     static final long MAX_CONTENT_HASH_BYTES = 2 * 1024 * 1024;
     private final long offset;
-    @Getter private final String md5;
-    @Getter private final int index;
-    @Getter private int md5Size;
+    @Getter
+    private final String md5;
+    @Getter
+    private final int index;
+    @Getter
+    private int md5Size;
 
     public RememberedTrackedFile(TrackedFile original) throws IOException {
         this(original, 0);

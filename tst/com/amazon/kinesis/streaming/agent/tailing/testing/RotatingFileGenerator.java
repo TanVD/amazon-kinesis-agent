@@ -3,12 +3,11 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-
 import com.amazon.kinesis.streaming.agent.Logging;
 import com.google.common.util.concurrent.AbstractScheduledService;
+import org.slf4j.Logger;
+
+import java.util.concurrent.TimeUnit;
 
 public class RotatingFileGenerator extends AbstractScheduledService {
     private static final Logger LOGGER = Logging.getLogger(RotatingFileGenerator.class);
@@ -23,7 +22,7 @@ public class RotatingFileGenerator extends AbstractScheduledService {
     }
 
     public RotatingFileGenerator(FileRotator rotator, double recordsPerSecond, long wakeUpIntervalMillis,
-            long rotationIntervalMillis) {
+                                 long rotationIntervalMillis) {
         super();
         this.rotator = rotator;
         this.recordsPerSecond = recordsPerSecond;

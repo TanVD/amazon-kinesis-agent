@@ -3,13 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.tailing.SourceFile;
 import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
 import com.amazon.kinesis.streaming.agent.tailing.TrackedFileList;
@@ -18,6 +11,12 @@ import com.amazon.kinesis.streaming.agent.tailing.testing.CreateFileRotator;
 import com.amazon.kinesis.streaming.agent.tailing.testing.FileRotator;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TruncateFileRotator;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class TrackedFileRotationAnalyzerTest extends TailingTestBase {
     private SourceFile getSourceFile(FileRotator rotator) {
@@ -40,17 +39,17 @@ public class TrackedFileRotationAnalyzerTest extends TailingTestBase {
         TrackedFileRotationAnalyzer analyzer = new TrackedFileRotationAnalyzer(current, incoming, null);
 
         // check the current counterparts
-        for(int i = 0; i < current.size(); ++i) {
+        for (int i = 0; i < current.size(); ++i) {
             Assert.assertTrue(analyzer.hasCounterpart(current.get(i)));
-            Assert.assertEquals(analyzer.getCounterpartIndex(current.get(i)), i+1);
-            Assert.assertEquals(analyzer.getCounterpart(current.get(i)).getId(), incoming.get(i+1).getId());
+            Assert.assertEquals(analyzer.getCounterpartIndex(current.get(i)), i + 1);
+            Assert.assertEquals(analyzer.getCounterpart(current.get(i)).getId(), incoming.get(i + 1).getId());
         }
         // check the incoming counterparts
         Assert.assertFalse(analyzer.hasCounterpart(incoming.get(0)));
-        for(int i = 1; i < incoming.size(); ++i) {
+        for (int i = 1; i < incoming.size(); ++i) {
             Assert.assertTrue(analyzer.hasCounterpart(incoming.get(i)));
-            Assert.assertEquals(analyzer.getCounterpartIndex(incoming.get(i)), i-1);
-            Assert.assertEquals(analyzer.getCounterpart(incoming.get(i)).getId(), current.get(i-1).getId());
+            Assert.assertEquals(analyzer.getCounterpartIndex(incoming.get(i)), i - 1);
+            Assert.assertEquals(analyzer.getCounterpart(incoming.get(i)).getId(), current.get(i - 1).getId());
         }
     }
 
@@ -67,7 +66,7 @@ public class TrackedFileRotationAnalyzerTest extends TailingTestBase {
         TrackedFile currentOpenFile = current.get(0);
 
         // Write some data, then take another snapshot without rotating.. repeat few more time
-        for(int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 10; ++i) {
             rotator.appendDataToLatestFile(1024);
             TrackedFileList incoming = source.listFiles();
             Assert.assertEquals(incoming.size(), current.size());
@@ -96,7 +95,7 @@ public class TrackedFileRotationAnalyzerTest extends TailingTestBase {
         // Delete the oldest file and take another snapshot and see that deleting old files does not change our logic
         moveFileToTrash(rotator.getFile(rotator.getMaxInputFileIndex()));
         TrackedFileList incoming = source.listFiles();
-        Assert.assertEquals(incoming.size(), initialFiles-1);
+        Assert.assertEquals(incoming.size(), initialFiles - 1);
         TrackedFileRotationAnalyzer analyzer = new TrackedFileRotationAnalyzer(current, incoming, currentOpenFile);
         Assert.assertTrue(analyzer.checkNoRotation());
     }
@@ -113,7 +112,7 @@ public class TrackedFileRotationAnalyzerTest extends TailingTestBase {
         TrackedFileList current = source.listFiles();
         TrackedFile currentOpenFile = current.get(0);
         // Rotate, keeping same current snapshot, and validate that a rotatation is detected every time
-        for(int i = 0; i < additionalRotations;  ++i) {
+        for (int i = 0; i < additionalRotations; ++i) {
             rotator.rotate();
             TrackedFileList incoming = source.listFiles();
             // Create the analyzer and make sure that it will detect the rotation
@@ -122,7 +121,7 @@ public class TrackedFileRotationAnalyzerTest extends TailingTestBase {
         }
 
         // Rotate, updating current snalshot, and validate that a rotatation is detected every time
-        for(int i = 0; i < additionalRotations;  ++i) {
+        for (int i = 0; i < additionalRotations; ++i) {
             rotator.rotate();
             TrackedFileList incoming = source.listFiles();
             // Create the analyzer and make sure that it will detect the rotation
@@ -172,15 +171,15 @@ public class TrackedFileRotationAnalyzerTest extends TailingTestBase {
         Assert.assertTrue(analyzer.allFilesHaveDisappeared());
     }
 
-    @DataProvider(name="currentOpenFileTruncatedAfterRotation")
+    @DataProvider(name = "currentOpenFileTruncatedAfterRotation")
     public Object[][] getCurrentOpenFileTruncatedAfterRotationData() {
-        return new Object[][] {
-                {6,2,1},    // single rotation
-                {6,2,3}     // multiple rotations
+        return new Object[][]{
+                {6, 2, 1},    // single rotation
+                {6, 2, 3}     // multiple rotations
         };
     }
 
-    @Test(dataProvider="currentOpenFileTruncatedAfterRotation")
+    @Test(dataProvider = "currentOpenFileTruncatedAfterRotation")
     public void testCurrentOpenFileTruncatedAfterRotation(int maxFilesToKeep, int initialFiles, int additionalRotations) throws IOException {
         TruncateFileRotator rotator = (TruncateFileRotator) new TruncateFileRotatorFactory().withMaxFilesToKeepOnDisk(maxFilesToKeep).create();
         SourceFile source = getSourceFile(rotator);
@@ -210,16 +209,16 @@ public class TrackedFileRotationAnalyzerTest extends TailingTestBase {
         Assert.assertFalse(analyzer.currentOpenFileWasTruncated());
     }
 
-    @DataProvider(name="findCurrentOpenFileAfterTruncation")
+    @DataProvider(name = "findCurrentOpenFileAfterTruncation")
     public Object[][] getFindCurrentOpenFileAfterTruncationData() {
-        return new Object[][] {
-                {6,2,1},    // single rotation
-                {6,2,3}     // multiple rotations
+        return new Object[][]{
+                {6, 2, 1},    // single rotation
+                {6, 2, 3}     // multiple rotations
         };
     }
 
-    @Test(dataProvider="findCurrentOpenFileAfterTruncation")
-    public void testFindCurrentOpenFileAfterTruncation(int maxFilesToKeep, int initialFiles,int additionalRotations) throws IOException {
+    @Test(dataProvider = "findCurrentOpenFileAfterTruncation")
+    public void testFindCurrentOpenFileAfterTruncation(int maxFilesToKeep, int initialFiles, int additionalRotations) throws IOException {
         TruncateFileRotator rotator = (TruncateFileRotator) new TruncateFileRotatorFactory().withMaxFilesToKeepOnDisk(maxFilesToKeep).create();
         SourceFile source = getSourceFile(rotator);
 

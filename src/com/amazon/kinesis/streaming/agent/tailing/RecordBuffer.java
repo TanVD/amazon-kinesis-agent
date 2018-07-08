@@ -1,27 +1,26 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Ints;
+
+import javax.annotation.concurrent.NotThreadSafe;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-
-import javax.annotation.concurrent.NotThreadSafe;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.primitives.Ints;
 
 /**
  * An record buffer.
@@ -37,7 +36,9 @@ public class RecordBuffer<R extends IRecord> implements Iterable<R> {
     protected final List<R> records;
 
     protected long timestamp = -1;
-    /** Cumulative size of records including any per-record overhead. */
+    /**
+     * Cumulative size of records including any per-record overhead.
+     */
     protected long currentSizeBytes = 0;
     protected IRecord lastRecord;
     protected final long id;
@@ -50,13 +51,14 @@ public class RecordBuffer<R extends IRecord> implements Iterable<R> {
 
     /**
      * Adds a record to the buffer.
+     *
      * @param record
      */
     public void add(R record) {
         records.add(record);
         lastRecord = record;
         currentSizeBytes += record.lengthWithOverhead();
-        if(timestamp < 0) {
+        if (timestamp < 0) {
             timestamp = System.currentTimeMillis();
         }
     }
@@ -111,9 +113,10 @@ public class RecordBuffer<R extends IRecord> implements Iterable<R> {
 
     /**
      * Removes the records at the specified indices.
+     *
      * @param itemsToRemoveSorted Indices of the records to be removed.
      * @return A buffer identical to the current one with the specified records
-     *         removed.
+     * removed.
      */
     public RecordBuffer<R> remove(int... itemsToRemoveSorted) {
         return remove(Ints.asList(itemsToRemoveSorted));
@@ -121,17 +124,18 @@ public class RecordBuffer<R extends IRecord> implements Iterable<R> {
 
     /**
      * Removes the records at the specified indices.
+     *
      * @param itemsToRemoveSorted Indices of the records to be removed.
      * @return A buffer identical to the current one with the specified records
-     *         removed.
+     * removed.
      */
     public RecordBuffer<R> remove(List<Integer> itemsToRemoveSorted) {
-        if(!itemsToRemoveSorted.isEmpty()) {
+        if (!itemsToRemoveSorted.isEmpty()) {
             Iterator<Integer> toRemoveIt = itemsToRemoveSorted.iterator();
             int toRemoveIndex = toRemoveIt.next();
             int newIndex = toRemoveIndex;
-            for(int originalIndex = toRemoveIndex; originalIndex < records.size(); ++originalIndex) {
-                if(originalIndex == toRemoveIndex) {
+            for (int originalIndex = toRemoveIndex; originalIndex < records.size(); ++originalIndex) {
+                if (originalIndex == toRemoveIndex) {
                     currentSizeBytes -= records.get(toRemoveIndex).length();
                     toRemoveIndex = toRemoveIt.hasNext() ? toRemoveIt.next() : -1;
                 } else {
@@ -156,10 +160,10 @@ public class RecordBuffer<R extends IRecord> implements Iterable<R> {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getSimpleName())
-            .append("(id=").append(id)
-            .append(",records=").append(sizeRecords())
-            .append(",bytes=").append(sizeBytes())
-            .append(")");
+                .append("(id=").append(id)
+                .append(",records=").append(sizeRecords())
+                .append(",bytes=").append(sizeBytes())
+                .append(")");
         return sb.toString();
     }
 }

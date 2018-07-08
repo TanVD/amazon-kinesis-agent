@@ -7,7 +7,8 @@
   "integer1": 100,
   "integer2": 200,
   "long1": 100000000000,
-  "long2": "200000000000",   /* Another comment */
+  "long2": "200000000000",
+  /* Another comment */
   "boolean_t1": "true",
   "boolean_t2": "T",
   "boolean_t3": "1",
@@ -29,8 +30,17 @@
     "config1_v2": "v2",
     "config1_v3": 3
   },
-  "intlist1": [1, 2, 3, 4],
-  "stringlist1": ["abc", "def", "hij"],
+  "intlist1": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "stringlist1": [
+    "abc",
+    "def",
+    "hij"
+  ],
   "configlist1": [
     {
       "v1": "c1_v1",

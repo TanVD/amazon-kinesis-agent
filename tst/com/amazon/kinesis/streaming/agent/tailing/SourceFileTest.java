@@ -3,6 +3,18 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
+import com.amazon.kinesis.streaming.agent.tailing.SourceFile;
+import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
+import com.amazon.kinesis.streaming.agent.tailing.TrackedFileList;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,24 +23,10 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.tailing.SourceFile;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFileList;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
 public class SourceFileTest extends TestBase {
     @DataProvider(name = "constructorFileNameParsing")
     public Object[][] testConstructorFileNameParsingData() {
-        return new Object[][] { { "/var/log/message*", "/var/log", "message*" }, { "/log.*", "/", "log.*" }, };
+        return new Object[][]{{"/var/log/message*", "/var/log", "message*"}, {"/log.*", "/", "log.*"},};
     }
 
     @Test(dataProvider = "constructorFileNameParsing")
@@ -45,33 +43,33 @@ public class SourceFileTest extends TestBase {
         Assert.assertEquals(src.getFilePattern(), Paths.get("testfile.log.*"));
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class, expectedExceptionsMessageRegExp="Directory component is empty.*")
+    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "Directory component is empty.*")
     public void testConfigurationWithEmptyDirectory() {
         new SourceFile(null, "messages*");
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class, expectedExceptionsMessageRegExp="File name component is empty.*")
+    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "File name component is empty.*")
     public void testConfigurationWithEmptyFileName() {
         new SourceFile(null, "/var/log/");
     }
 
     @DataProvider(name = "listAndCountFiles")
     public Object[][] testListAndCountFileData() {
-        return new Object[][] {
+        return new Object[][]{
                 {
-                    "app.log*",
-                    new String[] { "app.log.1", "app.log.2", "app.log.3", "app.log.4", "app.log" },
-                    new String[] { "another.log", "app.log.1.gz", "app.log.gz", "app.log.zip" }
+                        "app.log*",
+                        new String[]{"app.log.1", "app.log.2", "app.log.3", "app.log.4", "app.log"},
+                        new String[]{"another.log", "app.log.1.gz", "app.log.gz", "app.log.zip"}
                 },
                 {   // single file
-                    "app.log*",
-                    new String[] { "app.log" },
-                    new String[] { "another.log", "app.log.1.gz", "app.log.bz2" }
+                        "app.log*",
+                        new String[]{"app.log"},
+                        new String[]{"another.log", "app.log.1.gz", "app.log.bz2"}
                 },
                 {
-                    "app[01][123456789].log",
-                    new String[] { "app05.log", "app04.log", "app03.log", "app02.log", "app01.log" },
-                    new String[] { "another.log", "app.log.1", "app.log.2", "app05.log.1.gz" }
+                        "app[01][123456789].log",
+                        new String[]{"app05.log", "app04.log", "app03.log", "app02.log", "app01.log"},
+                        new String[]{"another.log", "app.log.1", "app.log.2", "app05.log.1.gz"}
                 },
         };
     }
@@ -106,9 +104,9 @@ public class SourceFileTest extends TestBase {
         Assert.assertEquals(toPathList(result).toArray(), matchingFiles.toArray());
 
         // sanity check the lastModified time
-        if(result.size() > 1) {
-            for(int i = 0; i < result.size()-1; ++i) {
-                Assert.assertTrue(result.get(i).getLastModifiedTime() >= result.get(i+1).getLastModifiedTime());
+        if (result.size() > 1) {
+            for (int i = 0; i < result.size() - 1; ++i) {
+                Assert.assertTrue(result.get(i).getLastModifiedTime() >= result.get(i + 1).getLastModifiedTime());
             }
         }
 

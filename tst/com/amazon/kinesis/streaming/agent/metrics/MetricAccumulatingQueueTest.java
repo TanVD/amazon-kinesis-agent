@@ -3,14 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.metrics;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.metrics.CWMetricKey;
 import com.amazon.kinesis.streaming.agent.metrics.MetricAccumulatingQueue;
 import com.amazon.kinesis.streaming.agent.metrics.MetricDatumWithKey;
@@ -18,6 +10,13 @@ import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.MetricDatum;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class MetricAccumulatingQueueTest extends TestBase {
 

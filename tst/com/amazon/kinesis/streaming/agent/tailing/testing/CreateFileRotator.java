@@ -3,23 +3,25 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import lombok.Getter;
+import lombok.ToString;
+
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import javax.annotation.concurrent.NotThreadSafe;
-
-import lombok.Getter;
-import lombok.ToString;
 
 /**
  * A rotator that simply creates a new file with a new name every time.
  */
 @NotThreadSafe
-@ToString(callSuper=true)
+@ToString(callSuper = true)
 public class CreateFileRotator extends FileRotator {
-    /** The index to be appended to next new file name. */
-    @Getter private int nextFileIndex = 1;
+    /**
+     * The index to be appended to next new file name.
+     */
+    @Getter
+    private int nextFileIndex = 1;
 
 //    public CreateFileRotator(Path dir, String prefix, int maxFilesToKeep) {
 //        super(dir, prefix, maxFilesToKeep);

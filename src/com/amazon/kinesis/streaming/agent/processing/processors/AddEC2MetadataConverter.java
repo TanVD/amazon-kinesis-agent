@@ -20,7 +20,6 @@ import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.processing.exceptions.DataConversionException;
 import com.amazon.kinesis.streaming.agent.processing.interfaces.IDataConverter;
 import com.amazon.kinesis.streaming.agent.processing.interfaces.IJSONPrinter;
-import com.amazon.kinesis.streaming.agent.processing.interfaces.ILogParser;
 import com.amazon.kinesis.streaming.agent.processing.utils.ProcessingUtilsFactory;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
@@ -148,7 +147,7 @@ public class AddEC2MetadataConverter implements IDataConverter {
             }
 
             if (config.containsKey("metadataTimestamp")) {
-                metadata.put( config.readString("metadataTimestamp"),
+                metadata.put(config.readString("metadataTimestamp"),
                         new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
                                 .format(new Date(metadataTimestamp)));
             }

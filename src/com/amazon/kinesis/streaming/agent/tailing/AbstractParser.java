@@ -1,17 +1,27 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
+
+import com.amazon.kinesis.streaming.agent.ByteBuffers;
+import com.amazon.kinesis.streaming.agent.Logging;
+import com.amazon.kinesis.streaming.agent.processing.exceptions.DataConversionException;
+import com.amazon.kinesis.streaming.agent.processing.interfaces.IDataConverter;
+import com.amazon.kinesis.streaming.agent.tailing.FileFlow.InitialPosition;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import lombok.Getter;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -23,18 +33,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import lombok.Getter;
-
-import org.slf4j.Logger;
-
-import com.amazon.kinesis.streaming.agent.ByteBuffers;
-import com.amazon.kinesis.streaming.agent.Logging;
-import com.amazon.kinesis.streaming.agent.processing.exceptions.DataConversionException;
-import com.amazon.kinesis.streaming.agent.processing.interfaces.IDataConverter;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow.InitialPosition;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 
 /**
  * The base record parser implementation which implements all the mechanics of
@@ -49,13 +47,19 @@ import com.google.common.base.Preconditions;
  */
 public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
     protected final Logger logger;
-    @Getter protected final FileFlow<R> flow;
-    @Getter protected final String name;
-    @Getter protected final ISplitter recordSplitter;
-    @Getter protected final int bufferSize;
+    @Getter
+    protected final FileFlow<R> flow;
+    @Getter
+    protected final String name;
+    @Getter
+    protected final ISplitter recordSplitter;
+    @Getter
+    protected final int bufferSize;
 
-    @Getter protected TrackedFile currentFile;
-    @Getter protected final IDataConverter dataConverter;
+    @Getter
+    protected TrackedFile currentFile;
+    @Getter
+    protected final IDataConverter dataConverter;
     @VisibleForTesting
     FileChannel currentFileChannel;
     private long currentFileChannelOffset = -1;
@@ -106,7 +110,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
             try {
                 goToInitialPosition();
                 return true;
-            } catch(IOException e) {
+            } catch (IOException e) {
                 logger.error("{}: Failed setting the initial position on file {}", name, file, e);
                 stopParsing("Unhandled error.");
                 totalUndhandledErrors.incrementAndGet();
@@ -144,7 +148,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
     public synchronized boolean isAtEndOfCurrentFile() {
         try {
             return currentFile != null &&
-                currentFileChannelOffset == currentFileChannel.size();
+                    currentFileChannelOffset == currentFileChannel.size();
         } catch (IOException e) {
             logger.error("{}: Failed when getting the size of current channel for file {}.", name, currentFile, e);
             stopParsing("Unhandled error.");
@@ -180,7 +184,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
             } else {
                 return false;
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             logger.error("{}: Failed when setting current file to {} (reset={}).", name, file, resetParsing, e);
             stopParsing("Unhandled error.");
             totalUndhandledErrors.incrementAndGet();
@@ -214,7 +218,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
             if (readNextChunk() > 0) {
                 int previousOffset = 0;
                 int nextOffset = recordSplitter.locateNextRecord(currentBuffer);
-                while(nextOffset != -1) {
+                while (nextOffset != -1) {
                     previousOffset = nextOffset;
                     nextOffset = recordSplitter.locateNextRecord(currentBuffer);
                 }
@@ -251,7 +255,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
                 tryReadMoreRecordsFromChannel();
                 return readRecordFromCurrentBuffer();
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             logger.error("{}: Failed when parsing record from current file {}", name, currentFile, e);
             stopParsing("Unhandled error.");
             totalUndhandledErrors.incrementAndGet();
@@ -279,21 +283,20 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
                 //  record. This is essential to handle "runaway" records and
                 //  corrupted files.
                 logger.warn("{}: Detected record larger than buffer size ({} bytes) in {} at offset {}. " +
-                        "Discarding data until next record.",
+                                "Discarding data until next record.",
                         name, bufferSize, currentBufferFile, toChannelOffset(0));
                 totalRecordsLargerThanBuffer.incrementAndGet();
                 // 1. Use the whole buffer as the current record.
                 currentBuffer.position(currentBuffer.limit());
                 R record = buildRecord(0, currentBuffer.limit());
                 // 2. Discard data from file until we locate the beginning of a new record.
-                while(readNextChunk() > 0) {
+                while (readNextChunk() > 0) {
                     nextRecordOffset = recordSplitter.locateNextRecord(currentBuffer);
                     // Check if we found a new record, or we still need to discard some more...
                     if (nextRecordOffset > 0) {
-                        onDiscardedData(0, nextRecordOffset-1, "Runaway record.");
+                        onDiscardedData(0, nextRecordOffset - 1, "Runaway record.");
                         break;
-                    }
-                    else {
+                    } else {
                         onDiscardedData(0, currentBuffer.limit(), "Runaway record.");
                         currentBuffer.position(currentBuffer.limit());
                     }
@@ -325,7 +328,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
                             name, currentBufferStartOffset, currentFileChannel.position(),
                             currentFileChannel.size(),
                             currentBufferFile.getPath());
-                } catch(IOException e) {
+                } catch (IOException e) {
                     logger.debug("{}: Ignoring error after successful read.", e);
                 }
             }
@@ -335,8 +338,8 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
 
     /**
      * @return The number of bytes read from the channel, which can be
-     *         {@code 0}, or {@code -1} if the EOF was reached on the
-     *         channel. (See {@link ReadableByteChannel#read(ByteBuffer)}.)
+     * {@code 0}, or {@code -1} if the EOF was reached on the
+     * channel. (See {@link ReadableByteChannel#read(ByteBuffer)}.)
      * @throws IOException
      */
     private void tryReadMoreRecordsFromChannel() throws IOException {
@@ -364,7 +367,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
                 if (logger.isDebugEnabled()) {
                     try {
                         logger.debug("{}: Data being discarded: {}", name, ByteBuffers.visibleWhiteSpaces(ByteBuffers.toString(currentBuffer, StandardCharsets.UTF_8)));
-                    } catch(Exception e) {
+                    } catch (Exception e) {
                         logger.debug("{}: Error when printing data chunck.", e);
                     }
                 }
@@ -410,10 +413,10 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
         } else if (currentBufferFileEnded) {
             discardCurrentBuffer("New file was openeded.");
             getNewCurrentBuffer();
-        } else if(currentBuffer.limit() == currentBuffer.capacity()) {
-            if(recordsFromCurrentBuffer > 0) {
+        } else if (currentBuffer.limit() == currentBuffer.capacity()) {
+            if (recordsFromCurrentBuffer > 0) {
                 // TODO: Add metrics for bytes copied between buffers
-                if(currentBuffer.hasRemaining()) {
+                if (currentBuffer.hasRemaining()) {
                     ByteBuffer oldBuffer = currentBuffer;
                     TrackedFile oldBufferFile = currentBufferFile;
                     long oldBufferStartOffset = currentBufferStartOffset;
@@ -425,7 +428,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
                     //       the data copied from the old buffer now exists in both
                     //       buffers, though in the first buffer it's not referenced
                     //       by any records.
-                    if(logger.isTraceEnabled()) {
+                    if (logger.isTraceEnabled()) {
                         logger.trace("{}: Copied {} bytes from the current buffer to new one.", name, currentBuffer.position());
                     }
                 } else {
@@ -448,7 +451,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
 
     private void prepareCurrentBufferForReading() {
         currentBuffer.flip();
-        if(currentBufferSavedReadPosition > 0) {
+        if (currentBufferSavedReadPosition > 0) {
             currentBuffer.position(currentBufferSavedReadPosition);
             currentBufferSavedReadPosition = -1;
         }
@@ -469,18 +472,18 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
 
     private R buildRecord(int offset, int length) {
         ByteBuffer data = ByteBuffers.getPartialView(currentBuffer, offset, length);
-        
+
         if (fileFooterPattern != null && fileFooterPattern.pattern() != FileFlow.NO_MATCH_REGEX.pattern()) {
             final Matcher fileFooterMatcher = fileFooterPattern.matcher(data.asCharBuffer());
-            if(fileFooterMatcher.matches()) {
+            if (fileFooterMatcher.matches()) {
                 stopParsing("End of file reached, file footer pattern matched");
                 return null;
             }
         }
-        
+
         ++recordsFromCurrentBuffer;
         Preconditions.checkNotNull(currentBufferFile);
-        
+
         R record = null;
         try {
             record = buildRecord(currentBufferFile, convertData(data), toChannelOffset(offset), dataLength(data));
@@ -491,14 +494,14 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
         } finally {
             totalRecordsParsed.incrementAndGet();
         }
-        
+
         return record;
     }
-    
+
     private ByteBuffer convertData(ByteBuffer data) throws DataConversionException {
         if (getDataConverter() == null)
             return data;
-        
+
         ByteBuffer result = getDataConverter().convert(data);
         if (result != null) {
             totalRecordsProcessed.incrementAndGet();
@@ -508,7 +511,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
         }
         return result;
     }
-    
+
     private long dataLength(ByteBuffer data) {
         return data == null ? 0 : data.remaining();
     }
@@ -528,6 +531,7 @@ public abstract class AbstractParser<R extends IRecord> implements IParser<R> {
     }
 
     protected abstract R buildRecord(TrackedFile recordFile, ByteBuffer data, long offset, long originalLength);
+
     protected abstract int getMaxRecordSize();
 
     @SuppressWarnings("serial")

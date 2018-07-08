@@ -3,21 +3,18 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
-import java.util.concurrent.TimeUnit;
-
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.tailing.AsyncPublisher;
 import com.amazon.kinesis.streaming.agent.tailing.AsyncPublisherThrottler;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
 import com.google.common.base.Stopwatch;
+import org.testng.annotations.Test;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.*;
 
 public class AsyncPublisherThrottlerTest extends TailingTestBase {
 
@@ -36,7 +33,7 @@ public class AsyncPublisherThrottlerTest extends TailingTestBase {
                 getTestPublisher(), 100, maxBackoffMillis,
                 AsyncPublisherThrottler.DEFAULT_BACKOFF_FACTOR, 0.0,
                 AsyncPublisherThrottler.DEFAULT_RECOVERY_FACTOR);
-        while(bo.getNextBackoff() < maxBackoffMillis)
+        while (bo.getNextBackoff() < maxBackoffMillis)
             bo.onSendError();
         // More failures... and make sure that backoff doesn't change
         bo.onSendError();
@@ -169,7 +166,7 @@ public class AsyncPublisherThrottlerTest extends TailingTestBase {
         AsyncPublisherThrottler<FirehoseRecord> bo = new AsyncPublisherThrottler<FirehoseRecord>(
                 getTestPublisher(), initialBackoffMillis, maxBackoffMillis,
                 backoffFactor, jitter, recoveryFactor);
-        for(int i = 0; i < 10; ++i)
+        for (int i = 0; i < 10; ++i)
             bo.onSendError();
         int expected = 10;
         assertEquals(bo.getFailures(), expected);
@@ -200,7 +197,7 @@ public class AsyncPublisherThrottlerTest extends TailingTestBase {
         AsyncPublisherThrottler<FirehoseRecord> bo = new AsyncPublisherThrottler<FirehoseRecord>(
                 getTestPublisher(), initialBackoffMillis, maxBackoffMillis,
                 backoffFactor, jitter, recoveryFactor);
-        for(int i = 0; i < 10; ++i)
+        for (int i = 0; i < 10; ++i)
             bo.onSendError();
         int expected = 10;
         assertEquals(bo.getFailures(), expected);
@@ -282,7 +279,7 @@ public class AsyncPublisherThrottlerTest extends TailingTestBase {
         final double jitter = 0.0;
         final long minBackoff = 10000;
         final AsyncPublisherThrottler<FirehoseRecord> bo = new AsyncPublisherThrottler<FirehoseRecord>(
-                getTestPublisher(), minBackoff, 10*minBackoff,
+                getTestPublisher(), minBackoff, 10 * minBackoff,
                 AsyncPublisherThrottler.DEFAULT_BACKOFF_FACTOR, jitter,
                 AsyncPublisherThrottler.DEFAULT_RECOVERY_FACTOR);
         bo.onSendError();
@@ -301,7 +298,7 @@ public class AsyncPublisherThrottlerTest extends TailingTestBase {
         }.start();
         bo.onSendSuccess();
         // Sleep long enough for the abortion to be detected
-        Thread.sleep(2*AsyncPublisherThrottler.SPIN_TIME_MILLIS);
+        Thread.sleep(2 * AsyncPublisherThrottler.SPIN_TIME_MILLIS);
         assertFalse(timer.isRunning());
 
         // we slept less than the expected backoff... as good as it gets

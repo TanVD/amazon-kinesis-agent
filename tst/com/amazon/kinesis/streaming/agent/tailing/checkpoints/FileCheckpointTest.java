@@ -3,19 +3,18 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.checkpoints;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
 import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpoint;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 
 public class FileCheckpointTest extends TailingTestBase {
@@ -43,14 +42,14 @@ public class FileCheckpointTest extends TailingTestBase {
         Assert.assertEquals(cp2.getOffset(), 1000000000000L);
     }
 
-    @Test(expectedExceptions=IllegalArgumentException.class, expectedExceptionsMessageRegExp="The offset .* must be a non-negative integer")
+    @Test(expectedExceptions = IllegalArgumentException.class, expectedExceptionsMessageRegExp = "The offset .* must be a non-negative integer")
     public void testNegativePosition() throws IOException {
         Path tmp1 = testFiles.createTempFile();
         TrackedFile file1 = new TrackedFile(flow, tmp1);
         new FileCheckpoint(file1, -1);
     }
 
-    @Test(expectedExceptions=NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void testNullFileId() throws IOException {
         new FileCheckpoint(null, 0);
     }

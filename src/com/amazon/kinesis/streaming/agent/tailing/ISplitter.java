@@ -1,14 +1,14 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
@@ -26,8 +26,8 @@ public interface ISplitter {
      *
      * @param buffer
      * @return The position of the next record in the buffer, or {@code -1}
-     *         if the beginning of the record was not found before the end of
-     *         the buffer.
+     * if the beginning of the record was not found before the end of
+     * the buffer.
      */
     public int locateNextRecord(ByteBuffer buffer);
 }

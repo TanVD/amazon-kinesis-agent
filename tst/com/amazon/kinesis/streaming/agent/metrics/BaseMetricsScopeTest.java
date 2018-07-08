@@ -3,13 +3,12 @@
  */
 package com.amazon.kinesis.streaming.agent.metrics;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.metrics.AccumulatingMetricsScope;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
 import com.amazonaws.services.cloudwatch.model.MetricDatum;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class BaseMetricsScopeTest extends TestBase {
 

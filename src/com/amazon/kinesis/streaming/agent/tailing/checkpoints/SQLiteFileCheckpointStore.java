@@ -1,39 +1,17 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing.checkpoints;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import lombok.Cleanup;
-import lombok.ToString;
-
-import org.slf4j.Logger;
 
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.Logging;
@@ -42,12 +20,22 @@ import com.amazon.kinesis.streaming.agent.tailing.FileId;
 import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import lombok.Cleanup;
+import lombok.ToString;
+import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.*;
+import java.util.*;
 
 /**
  * Checkpoint store backed by a SQLite database file.
  * This class is thread-safe.
  */
-@ToString(exclude={"agentContext", "connection"})
+@ToString(exclude = {"agentContext", "connection"})
 public class SQLiteFileCheckpointStore implements FileCheckpointStore {
     private static final Logger LOGGER = Logging.getLogger(SQLiteFileCheckpointStore.class);
     private static final int DEFAULT_DB_CONNECTION_TIMEOUT_SECONDS = 5;
@@ -98,7 +86,7 @@ public class SQLiteFileCheckpointStore implements FileCheckpointStore {
 
             try {
                 LOGGER.debug("Connecting to database {}...", dbFile);
-                if(!Files.isDirectory(dbFile.getParent())) {
+                if (!Files.isDirectory(dbFile.getParent())) {
                     Files.createDirectories(dbFile.getParent());
                 }
                 String connectionString = String.format("jdbc:sqlite:%s", dbFile.toString());
@@ -118,7 +106,7 @@ public class SQLiteFileCheckpointStore implements FileCheckpointStore {
                         + "       offset bigint,"
                         + "       lastUpdated datetime,"
                         + "       primary key (flow, path))"
-                        );
+                );
             } catch (SQLException e) {
                 throw new RuntimeException("Failed to configure the checkpoint database.", e);
             }
@@ -132,7 +120,7 @@ public class SQLiteFileCheckpointStore implements FileCheckpointStore {
             try {
                 connect();
                 return true;
-            } catch(Exception e) {
+            } catch (Exception e) {
                 LOGGER.error("Failed to open a connection to the checkpoint database.", e);
                 return false;
             }
@@ -151,9 +139,9 @@ public class SQLiteFileCheckpointStore implements FileCheckpointStore {
         try {
             @Cleanup PreparedStatement update = connection.prepareStatement(
                     "update FILE_CHECKPOINTS " +
-                    "set fileId=?, offset=?, lastModifiedTime=?, size=?, " +
-                    "lastUpdated=strftime('%Y-%m-%d %H:%M:%f', 'now') " +
-                    "where flow=? and path=?");
+                            "set fileId=?, offset=?, lastModifiedTime=?, size=?, " +
+                            "lastUpdated=strftime('%Y-%m-%d %H:%M:%f', 'now') " +
+                            "where flow=? and path=?");
             update.setString(1, cp.getFile().getId().toString());
             update.setLong(2, cp.getOffset());
             update.setLong(3, cp.getFile().getLastModifiedTime());
@@ -164,7 +152,7 @@ public class SQLiteFileCheckpointStore implements FileCheckpointStore {
             if (affected == 0) {
                 @Cleanup PreparedStatement insert = connection.prepareStatement(
                         "insert or ignore into FILE_CHECKPOINTS " +
-                        "values(?, ?, ?, ?, ?, ?, strftime('%Y-%m-%d %H:%M:%f', 'now'))");
+                                "values(?, ?, ?, ?, ?, ?, strftime('%Y-%m-%d %H:%M:%f', 'now'))");
                 insert.setString(1, cp.getFile().getFlow().getId());
                 insert.setString(2, cp.getFile().getPath().toAbsolutePath().toString());
                 insert.setString(3, cp.getFile().getId().toString());
@@ -207,8 +195,8 @@ public class SQLiteFileCheckpointStore implements FileCheckpointStore {
         try {
             @Cleanup PreparedStatement statement = connection.prepareStatement(
                     "select fileId, lastModifiedTime, size, offset " +
-                    "from FILE_CHECKPOINTS " +
-                    "where flow=? and path=?");
+                            "from FILE_CHECKPOINTS " +
+                            "where flow=? and path=?");
             statement.setString(1, flow.getId());
             statement.setString(2, p.toAbsolutePath().toString());
             statement.setMaxRows(1);
@@ -235,10 +223,10 @@ public class SQLiteFileCheckpointStore implements FileCheckpointStore {
         try {
             @Cleanup PreparedStatement statement = connection.prepareStatement(
                     "select path, fileId, lastModifiedTime, size, offset " +
-                    "from FILE_CHECKPOINTS " +
-                    "where flow=? " +
-                    "order by lastUpdated desc " +
-                    "limit 1");
+                            "from FILE_CHECKPOINTS " +
+                            "where flow=? " +
+                            "order by lastUpdated desc " +
+                            "limit 1");
             statement.setString(1, flow.getId());
             statement.setMaxRows(1);
             @Cleanup ResultSet result = statement.executeQuery();
@@ -289,7 +277,7 @@ public class SQLiteFileCheckpointStore implements FileCheckpointStore {
         try {
             String query = String.format(
                     "delete from FILE_CHECKPOINTS " +
-                    "where datetime(lastUpdated, '+%d days') < CURRENT_TIMESTAMP",
+                            "where datetime(lastUpdated, '+%d days') < CURRENT_TIMESTAMP",
                     agentContext.checkpointTimeToLiveDays());
             @Cleanup PreparedStatement statement = connection.prepareStatement(query);
             statement.setQueryTimeout(dbQueryTimeoutSeconds);

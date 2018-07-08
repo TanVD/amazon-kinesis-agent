@@ -3,6 +3,15 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import com.amazon.kinesis.streaming.agent.ByteBuffers;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import com.google.common.base.Preconditions;
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -13,27 +22,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.annotation.concurrent.NotThreadSafe;
-
-import lombok.Getter;
-import lombok.Setter;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.slf4j.Logger;
-
-import com.amazon.kinesis.streaming.agent.ByteBuffers;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils;
-import com.google.common.base.Preconditions;
-
 /**
  * Generates records consisting of a combination of deterministic and random
  * data.
- *
+ * <p>
  * NOTE: The records are internally strings terminated by a newline, encoded
  * with UTF-8 and wrapped in a {@link ByteBuffer}, though different kind of
  * record formats/encodings/terminators can be implemented by overriding this
  * class.
- *
+ * <p>
  * The generated records are guaranteed to also be lexicographically ordered
  * strings; i.e. if {@code r1} was generated before {@code r2} it will also
  * sort before {@code r2} lexicogaphically.
@@ -46,11 +43,17 @@ public class RecordGenerator {
     private static final int DEFAULT_AVERAGE_RECORD_SIZE = 1024;
     private static final Logger LOGGER = TestUtils.getLogger(RecordGenerator.class);
 
-    @Getter @Setter private int averageRecordSize;
-    @Getter @Setter private double recordSizeJitter;
+    @Getter
+    @Setter
+    private int averageRecordSize;
+    @Getter
+    @Setter
+    private double recordSizeJitter;
     private boolean multiline;
     private ByteBuffer partialRecord = null;
-    @Getter @Setter private String recordTag = null;
+    @Getter
+    @Setter
+    private String recordTag = null;
 
     public RecordGenerator(int averageRecordSize, double recordSizeJitter, boolean multiline) {
         this.averageRecordSize = averageRecordSize;
@@ -64,14 +67,14 @@ public class RecordGenerator {
 
     public RecordGenerator(boolean multiline) {
         this(DEFAULT_AVERAGE_RECORD_SIZE, DEFAULT_RCORD_SIZE_JITER, multiline);
-        }
+    }
 
     public RecordGenerator() {
         this(DEFAULT_AVERAGE_RECORD_SIZE, DEFAULT_RCORD_SIZE_JITER, false);
     }
 
     public byte[] getNewRecord() {
-        double jitter = recordSizeJitter == 0.0 ? 1.0 : ThreadLocalRandom.current().nextDouble(1-recordSizeJitter/2, 1+recordSizeJitter/2);
+        double jitter = recordSizeJitter == 0.0 ? 1.0 : ThreadLocalRandom.current().nextDouble(1 - recordSizeJitter / 2, 1 + recordSizeJitter / 2);
         int recordSize = (int) Math.round(averageRecordSize * jitter);
         return getNewRecord(recordSize);
     }
@@ -103,7 +106,6 @@ public class RecordGenerator {
     }
 
     /**
-     *
      * @param channel
      * @return Number of bytes written to channel.
      * @throws IOException
@@ -111,7 +113,7 @@ public class RecordGenerator {
     public long startAppendPartialRecordToChannel(FileChannel channel) throws IOException {
         Preconditions.checkState(partialRecord == null, "There's already an un-finished partial record.");
         ByteBuffer record = ByteBuffer.wrap(getNewRecord());
-        int length = record.limit()/2;
+        int length = record.limit() / 2;
         ByteBuffer firstHalf = ByteBuffers.getPartialView(record, 0, length);
         channel.write(firstHalf);
         channel.force(true);
@@ -120,13 +122,12 @@ public class RecordGenerator {
     }
 
     /**
-     *
      * @param channel
      * @return Number of bytes written to channel.
      * @throws IOException
      */
     public long finishAppendPartialRecordToChannel(FileChannel channel) throws IOException {
-        if(partialRecord == null)
+        if (partialRecord == null)
             return 0;
         else {
             int length = partialRecord.limit();
@@ -137,18 +138,17 @@ public class RecordGenerator {
         }
     }
 
-   /**
-    * @param channel
-    * @param nRecords
-    * @return Number of bytes written to channel.
-    * @throws IOException
-    */
+    /**
+     * @param channel
+     * @param nRecords
+     * @return Number of bytes written to channel.
+     * @throws IOException
+     */
     public long appendRecordsToChannel(FileChannel channel, int nRecords) throws IOException {
         return appendRecordsToChannel(channel, nRecords, "channel");
     }
 
     /**
-     *
      * @param channel
      * @param nRecords
      * @param name
@@ -159,7 +159,7 @@ public class RecordGenerator {
         Preconditions.checkArgument(nRecords >= 1);
         long totalSize = finishAppendPartialRecordToChannel(channel);
         int recordCount = 0;
-        if(totalSize > 0) {
+        if (totalSize > 0) {
             ++recordCount;
         }
         while (recordCount < nRecords) {
@@ -174,7 +174,6 @@ public class RecordGenerator {
     }
 
     /**
-     *
      * @param channel
      * @param maxBytes
      * @return Number of records written to channel.
@@ -185,7 +184,6 @@ public class RecordGenerator {
     }
 
     /**
-     *
      * @param channel
      * @param maxBytes
      * @param name
@@ -198,7 +196,7 @@ public class RecordGenerator {
         while (totalSize < maxBytes) {
             ByteBuffer record = ByteBuffer.wrap(getNewRecord());
             totalSize += record.limit();
-            if(totalSize >= maxBytes)
+            if (totalSize >= maxBytes)
                 break;
             channel.write(record);
             ++recordCount;
@@ -209,7 +207,6 @@ public class RecordGenerator {
     }
 
     /**
-     *
      * @param file
      * @return Number of bytes written to file.
      * @throws IOException
@@ -221,7 +218,6 @@ public class RecordGenerator {
     }
 
     /**
-     *
      * @param file
      * @return Number of bytes written to file.
      * @throws IOException
@@ -233,7 +229,6 @@ public class RecordGenerator {
     }
 
     /**
-     *
      * @param file
      * @param nRecords
      * @return Number of bytes written to file.
@@ -247,6 +242,7 @@ public class RecordGenerator {
 
     /**
      * )
+     *
      * @param file
      * @param maxBytes
      * @return Number of records written to file.

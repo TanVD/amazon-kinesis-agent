@@ -3,25 +3,23 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import java.io.InputStream;
-import java.nio.file.Files;
-
-import lombok.Cleanup;
-
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.tailing.FileTailer;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseFileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpointStore;
 import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender;
+import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TestAgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
+import lombok.Cleanup;
+import org.testng.annotations.Test;
+
+import java.io.InputStream;
+import java.nio.file.Files;
 
 public class FileTailerEnduranceTest extends TailingTestBase {
 
-    @Test(enabled=false, groups = { "endurance" })
+    @Test(enabled = false, groups = {"endurance"})
     public void testFileTailer() throws Exception {
         final int targetFileSize = 10 * 1024 * 1024;
         FileRotatorFactory rotatorFactory = new TruncateFileRotatorFactory(targetFileSize);
@@ -43,7 +41,7 @@ public class FileTailerEnduranceTest extends TailingTestBase {
         tailer.awaitRunning();
 
         // Run indefinitely
-        while(tailer.isRunning()) {
+        while (tailer.isRunning()) {
             tailer.heartbeat(context);
             //logger.debug("Tailer bytes behind: {}, Files behind: {}", tailer.bytesBehind(), tailer.filesBehind());
             Thread.sleep(1000);

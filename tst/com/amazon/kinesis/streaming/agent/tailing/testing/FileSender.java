@@ -3,6 +3,18 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import com.amazon.kinesis.streaming.agent.AgentContext;
+import com.amazon.kinesis.streaming.agent.tailing.AbstractSender;
+import com.amazon.kinesis.streaming.agent.tailing.BufferSendResult;
+import com.amazon.kinesis.streaming.agent.tailing.IRecord;
+import com.amazon.kinesis.streaming.agent.tailing.RecordBuffer;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.base.Throwables;
+import lombok.Getter;
+import org.slf4j.Logger;
+
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -15,20 +27,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
-import lombok.Getter;
-
-import org.slf4j.Logger;
-
-import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.AbstractSender;
-import com.amazon.kinesis.streaming.agent.tailing.BufferSendResult;
-import com.amazon.kinesis.streaming.agent.tailing.IRecord;
-import com.amazon.kinesis.streaming.agent.tailing.RecordBuffer;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.base.Throwables;
 
 /**
  * A sender that writes data to a file.
@@ -53,15 +51,24 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
     public static final double BAD_ERROR_AFTER_PARTIAL_COMMIT_RATE = 0.03;
 
 
-    @Getter private final Path outputFile;
-    @Getter private final AgentContext agentContext;
-    @Getter private final long averageLatencyMillis;
-    @Getter private final double latencyJitter;
-    @Getter private final double partialFailureRate;
-    @Getter private final double errorBeforeCommitRate;
-    @Getter private final double errorAfterPartialCommitRate;
-    @Getter private final int maxSendBatchSizeRecords = -1;
-    @Getter private final long maxSendBatchSizeBytes = -1;
+    @Getter
+    private final Path outputFile;
+    @Getter
+    private final AgentContext agentContext;
+    @Getter
+    private final long averageLatencyMillis;
+    @Getter
+    private final double latencyJitter;
+    @Getter
+    private final double partialFailureRate;
+    @Getter
+    private final double errorBeforeCommitRate;
+    @Getter
+    private final double errorAfterPartialCommitRate;
+    @Getter
+    private final int maxSendBatchSizeRecords = -1;
+    @Getter
+    private final long maxSendBatchSizeBytes = -1;
 
     private final AtomicInteger expectedDuplicateRecords = new AtomicInteger();
     private final AtomicLong totalRecordsAttempted = new AtomicLong();
@@ -74,21 +81,20 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
     }
 
     /**
-     *
      * @param agentContext
      * @param outputFile
-     * @param averageLatencyMillis Average latency in millis to add to each
-     *        request.
+     * @param averageLatencyMillis        Average latency in millis to add to each
+     *                                    request.
      * @param latencyJitter
-     * @param partialFailureRate Percent of records in buffer that that will
-     *        report failure to write to file.
-     * @param errorBeforeCommitRate Percent of time to raise an error before
-     *        any records were written to file. NOTE: this will not produce
-     *        data duplication if buffer was retried.
+     * @param partialFailureRate          Percent of records in buffer that that will
+     *                                    report failure to write to file.
+     * @param errorBeforeCommitRate       Percent of time to raise an error before
+     *                                    any records were written to file. NOTE: this will not produce
+     *                                    data duplication if buffer was retried.
      * @param errorAfterPartialCommitRate Percent of time to raise an error
-     *        after a few records have been written to the file. NOTE: this,
-     *        combined with the retry policies of the publisher, could result
-     *        in data duplication.
+     *                                    after a few records have been written to the file. NOTE: this,
+     *                                    combined with the retry policies of the publisher, could result
+     *                                    in data duplication.
      */
     public FileSender(AgentContext agentContext, Path outputFile, long averageLatencyMillis, double latencyJitter, double partialFailureRate, double errorBeforeCommitRate, double errorAfterPartialCommitRate) {
         Preconditions.checkNotNull(outputFile);
@@ -130,14 +136,14 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
             try (FileChannel channel = FileChannel.open(outputFile, StandardOpenOption.WRITE, StandardOpenOption.APPEND)) {
                 int index = 0;
                 for (R record : buffer) {
-                    if(minPartialFailures == 0 && (maxPartialFailures == 0 || TestUtils.decide(0.5))) {
+                    if (minPartialFailures == 0 && (maxPartialFailures == 0 || TestUtils.decide(0.5))) {
                         successfulRecords.add(index);
                         channel.write(record.data().duplicate());
                     } else {
                         --maxPartialFailures;
                         minPartialFailures = Math.max(minPartialFailures - 1, 0);
                     }
-                    if(index == indexForAfterCommitError) {
+                    if (index == indexForAfterCommitError) {
                         // Keep track of possible duplicates, in case we raise an exception
                         expectedDuplicateRecords.addAndGet(index + 1);
                         TestUtils.throwOccasionalError(errorAfterPartialCommitRate, new RuntimeException("Simulated failure after partial commit in FileSender#attemptSend"));
@@ -150,7 +156,7 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
                 totalRecordsAttempted.addAndGet(totalRecords);
                 totalRecordsSent.addAndGet(successfulRecords.size());
                 totalRecordsFailed.addAndGet(totalRecords - successfulRecords.size());
-                if(successfulRecords.size() == totalRecords) {
+                if (successfulRecords.size() == totalRecords) {
                     LOGGER.trace("{}:{} Buffer written to file successfully.",
                             name(), buffer);
                     return BufferSendResult.succeeded(buffer);
@@ -193,7 +199,10 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
 
     public static abstract class FileSenderFactory<R extends IRecord> {
         public abstract FileSender<R> create(AgentContext context, Path outputFile);
-        public boolean producesDuplicates() { return false; }
+
+        public boolean producesDuplicates() {
+            return false;
+        }
     }
 
     public static class PerfectFileSenderFactory<R extends IRecord> extends FileSenderFactory<R> {
@@ -235,6 +244,7 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
 
     /**
      * This sender can cause data duplication.
+     *
      * @param <R>
      */
     public static class FileSenderWithErrorsAfterPartialCommitFactory<R extends IRecord> extends FileSenderFactory<R> {
@@ -247,7 +257,9 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
         }
 
         @Override
-        public boolean producesDuplicates() { return true; }
+        public boolean producesDuplicates() {
+            return true;
+        }
     }
 
     public static class FileSenderWithPartialFailuresAndErrorsBeforeCommitFactory<R extends IRecord> extends FileSenderFactory<R> {
@@ -262,6 +274,7 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
 
     /**
      * This sender can cause data duplication.
+     *
      * @param <R>
      */
     public static class MisbehavingFileSenderFactory<R extends IRecord> extends FileSenderFactory<R> {
@@ -275,6 +288,8 @@ public class FileSender<R extends IRecord> extends AbstractSender<R> {
         }
 
         @Override
-        public boolean producesDuplicates() { return true; }
+        public boolean producesDuplicates() {
+            return true;
+        }
     }
 }

@@ -3,15 +3,14 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.tailing.FileId;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class FileIdTest extends TestBase {
 
@@ -30,6 +29,7 @@ public class FileIdTest extends TestBase {
         Assert.assertEquals(id1, id2);
         Assert.assertEquals(id1.hashCode(), id2.hashCode());
     }
+
     @Test
     public void testFileIdDoesntChangeWhenLastModifiedTimeIsChanged() throws IOException {
         Path tmp = testFiles.createTempFile();

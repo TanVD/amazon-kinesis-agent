@@ -1,17 +1,22 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.processing.parsers;
+
+import com.amazon.kinesis.streaming.agent.config.ConfigurationException;
+import com.amazon.kinesis.streaming.agent.processing.exceptions.LogParsingException;
+import com.amazon.kinesis.streaming.agent.processing.utils.ProcessingUtilsFactory.LogFormat;
+import com.google.common.collect.ImmutableList;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,63 +24,57 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.amazon.kinesis.streaming.agent.config.ConfigurationException;
-import com.amazon.kinesis.streaming.agent.processing.exceptions.LogParsingException;
-import com.amazon.kinesis.streaming.agent.processing.utils.ProcessingUtilsFactory.LogFormat;
-import com.google.common.collect.ImmutableList;
-
 /**
  * Class for parsing and transforming records of apache log files
- * 
+ * <p>
  * Currently supported format (with typical configuration)
  * Apache common log
  * Apache combined log
  * Apache error log
- * 
- * @author chaocheq
  *
+ * @author chaocheq
  */
 public class ApacheLogParser extends BaseLogParser {
 
     /**
-     * See https://httpd.apache.org/docs/1.3/logs.html#common 
+     * See https://httpd.apache.org/docs/1.3/logs.html#common
      * for reference of common log format and combined log format
      */
-    public static final List<String> COMMON_LOG_FIELDS = 
-            ImmutableList.of("host", 
-                             "ident",
-                             "authuser",
-                             "datetime",
-                             "request",
-                             "response",
-                             "bytes");
-    
-    public static final List<String> COMBINED_LOG_FIELDS = 
+    public static final List<String> COMMON_LOG_FIELDS =
+            ImmutableList.of("host",
+                    "ident",
+                    "authuser",
+                    "datetime",
+                    "request",
+                    "response",
+                    "bytes");
+
+    public static final List<String> COMBINED_LOG_FIELDS =
             new ImmutableList.Builder<String>()
-                             .addAll(COMMON_LOG_FIELDS)
-                             .add("referer")
-                             .add("agent").build();
-    
-    public static final List<String> ERROR_LOG_FIELDS = 
-            ImmutableList.of("timestamp", 
-                             "module",
-                             "severity",
-                             "processid",
-                             "threadid",
-                             "client",
-                             "message");
-    
-    public static final Pattern COMMON_APACHE_LOG_ENTRY_PATTERN = 
+                    .addAll(COMMON_LOG_FIELDS)
+                    .add("referer")
+                    .add("agent").build();
+
+    public static final List<String> ERROR_LOG_FIELDS =
+            ImmutableList.of("timestamp",
+                    "module",
+                    "severity",
+                    "processid",
+                    "threadid",
+                    "client",
+                    "message");
+
+    public static final Pattern COMMON_APACHE_LOG_ENTRY_PATTERN =
             Pattern.compile(PatternConstants.COMMON_APACHE_LOG + ".*");
-    
-    public static final Pattern COMBINED_APACHE_LOG_ENTRY_PATTERN = 
+
+    public static final Pattern COMBINED_APACHE_LOG_ENTRY_PATTERN =
             Pattern.compile(PatternConstants.COMBINED_APACHE_LOG + ".*");
-    
-    public static final Pattern APACHE_ERROR_LOG_ENTRY_PATTERN = 
+
+    public static final Pattern APACHE_ERROR_LOG_ENTRY_PATTERN =
             Pattern.compile(PatternConstants.APACHE_ERROR_LOG);
-    
-    public ApacheLogParser(LogFormat format, String matchPattern, 
-            List<String> customFields) {
+
+    public ApacheLogParser(LogFormat format, String matchPattern,
+                           List<String> customFields) {
         super(format, matchPattern, customFields);
     }
 
@@ -86,27 +85,27 @@ public class ApacheLogParser extends BaseLogParser {
         }
         final Map<String, Object> recordMap = new LinkedHashMap<String, Object>();
         Matcher matcher = logEntryPattern.matcher(record);
-        
+
         if (!matcher.matches()) {
             throw new LogParsingException("Invalid log entry given the entry pattern");
         }
-        
+
         if (matcher.groupCount() != fields.size()) {
-            throw new LogParsingException("The parsed fields don't match the given fields. " + 
-                                           matcher.groupCount() + " fields are parsed, " +
-                                           fields.size() + " fields are required");
+            throw new LogParsingException("The parsed fields don't match the given fields. " +
+                    matcher.groupCount() + " fields are parsed, " +
+                    fields.size() + " fields are required");
         }
-        
+
         for (int i = 0; i < fields.size(); i++) {
             String value = matcher.group(i + 1);
-            
+
             // the field is not found if it shows as "-"
             if (value != null && value.equals("-")) {
                 value = null;
             }
             recordMap.put(fields.get(i), value);
         }
-        
+
         return recordMap;
     }
 

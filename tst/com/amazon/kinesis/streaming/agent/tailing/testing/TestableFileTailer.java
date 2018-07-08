@@ -3,25 +3,16 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
-import java.io.IOException;
-
-import org.slf4j.Logger;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.AsyncPublisherService;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FileTailer;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseConstants;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseParser;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
-import com.amazon.kinesis.streaming.agent.tailing.IParser;
-import com.amazon.kinesis.streaming.agent.tailing.IRecord;
-import com.amazon.kinesis.streaming.agent.tailing.SourceFileTracker;
+import com.amazon.kinesis.streaming.agent.tailing.*;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpointStore;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Service;
+import org.slf4j.Logger;
+
+import java.io.IOException;
 
 /**
  * A file tailer with additional functionality to support unit tests.
@@ -42,7 +33,7 @@ public class TestableFileTailer<R extends IRecord> extends FileTailer<R> {
     private volatile boolean paused = false;
 
     public TestableFileTailer(AgentContext agentContext, FileFlow<R> flow, SourceFileTracker fileTracker,
-            AsyncPublisherService<R> publisher, IParser<R> parser, FileCheckpointStore checkpoints) throws IOException {
+                              AsyncPublisherService<R> publisher, IParser<R> parser, FileCheckpointStore checkpoints) throws IOException {
         super(agentContext, flow, fileTracker, publisher, parser, checkpoints);
     }
 
@@ -52,7 +43,7 @@ public class TestableFileTailer<R extends IRecord> extends FileTailer<R> {
     }
 
     public synchronized Service resume() {
-        if(paused) {
+        if (paused) {
             paused = false;
         }
         return this;
@@ -92,13 +83,13 @@ public class TestableFileTailer<R extends IRecord> extends FileTailer<R> {
         //   could still be files pending. Waiting and refreshing file system
         //   view will process them.
         updateRecordParser(true);
-        while(moreInputPending()) {
+        while (moreInputPending()) {
             LOGGER.debug("More input is pending in tailer: " +
-            		"Parser buffer rmaining: {}, " +
-            		"Parser current open file: {}, " +
-                    "Parser open file offset: {}, " +
-                    "Parser open file size: {}, " +
-            		"Tracker newer files pending: {}",
+                            "Parser buffer rmaining: {}, " +
+                            "Parser current open file: {}, " +
+                            "Parser open file offset: {}, " +
+                            "Parser open file size: {}, " +
+                            "Tracker newer files pending: {}",
                     parser.bufferedBytesRemaining(),
                     parser.getCurrentFile(),
                     parser.getCurrentFile().getCurrentOffset(),

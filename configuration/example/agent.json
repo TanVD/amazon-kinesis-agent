@@ -13,7 +13,11 @@
       "dataProcessingOptions": [
         {
           "optionName": "CSVTOJSON",
-          "customFieldNames": [ "field1", "field2", "field3" ],
+          "customFieldNames": [
+            "field1",
+            "field2",
+            "field3"
+          ],
           "delimiter": "\\t"
         }
       ]

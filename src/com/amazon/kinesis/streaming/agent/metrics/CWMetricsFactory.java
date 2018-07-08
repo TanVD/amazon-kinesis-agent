@@ -1,14 +1,14 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.metrics;
@@ -36,14 +36,14 @@ public class CWMetricsFactory implements IMetricsFactory {
      * Constructor.
      *
      * @param credentialsProvider client credentials for CloudWatch
-     * @param namespace the namespace under which the metrics will appear in the CloudWatch console
-     * @param bufferTimeMillis time to buffer metrics before publishing to CloudWatch
-     * @param maxQueueSize maximum number of metrics that we can have in a queue
+     * @param namespace           the namespace under which the metrics will appear in the CloudWatch console
+     * @param bufferTimeMillis    time to buffer metrics before publishing to CloudWatch
+     * @param maxQueueSize        maximum number of metrics that we can have in a queue
      */
     public CWMetricsFactory(AWSCredentialsProvider credentialsProvider,
-            String namespace,
-            long bufferTimeMillis,
-            int maxQueueSize) {
+                            String namespace,
+                            long bufferTimeMillis,
+                            int maxQueueSize) {
         this(new AmazonCloudWatchClient(credentialsProvider), namespace, bufferTimeMillis, maxQueueSize);
     }
 
@@ -51,16 +51,16 @@ public class CWMetricsFactory implements IMetricsFactory {
      * Constructor.
      *
      * @param credentialsProvider client credentials for CloudWatch
-     * @param clientConfig Configuration to use with the AmazonCloudWatchClient
-     * @param namespace the namespace under which the metrics will appear in the CloudWatch console
-     * @param bufferTimeMillis time to buffer metrics before publishing to CloudWatch
-     * @param maxQueueSize maximum number of metrics that we can have in a queue
+     * @param clientConfig        Configuration to use with the AmazonCloudWatchClient
+     * @param namespace           the namespace under which the metrics will appear in the CloudWatch console
+     * @param bufferTimeMillis    time to buffer metrics before publishing to CloudWatch
+     * @param maxQueueSize        maximum number of metrics that we can have in a queue
      */
     public CWMetricsFactory(AWSCredentialsProvider credentialsProvider,
-            ClientConfiguration clientConfig,
-            String namespace,
-            long bufferTimeMillis,
-            int maxQueueSize) {
+                            ClientConfiguration clientConfig,
+                            String namespace,
+                            long bufferTimeMillis,
+                            int maxQueueSize) {
         this(new AmazonCloudWatchClient(credentialsProvider, clientConfig), namespace, bufferTimeMillis, maxQueueSize);
     }
 
@@ -68,14 +68,14 @@ public class CWMetricsFactory implements IMetricsFactory {
      * Constructor.
      *
      * @param cloudWatchClient Client used to make CloudWatch requests
-     * @param namespace the namespace under which the metrics will appear in the CloudWatch console
+     * @param namespace        the namespace under which the metrics will appear in the CloudWatch console
      * @param bufferTimeMillis time to buffer metrics before publishing to CloudWatch
-     * @param maxQueueSize maximum number of metrics that we can have in a queue
+     * @param maxQueueSize     maximum number of metrics that we can have in a queue
      */
     public CWMetricsFactory(AmazonCloudWatch cloudWatchClient,
-            String namespace,
-            long bufferTimeMillis,
-            int maxQueueSize) {
+                            String namespace,
+                            long bufferTimeMillis,
+                            int maxQueueSize) {
         DefaultCWMetricsPublisher metricPublisher = new DefaultCWMetricsPublisher(cloudWatchClient, namespace);
 
         this.runnable =

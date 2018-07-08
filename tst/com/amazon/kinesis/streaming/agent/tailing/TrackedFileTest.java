@@ -3,18 +3,17 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
+import com.amazon.kinesis.streaming.agent.ByteBuffers;
+import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.ByteBuffers;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
 
 public class TrackedFileTest extends TestBase {
     @Test
@@ -90,7 +89,7 @@ public class TrackedFileTest extends TestBase {
         Assert.assertEquals(uf.getRemainingBytes(), 0);
     }
 
-    @Test(expectedExceptions=IllegalStateException.class, expectedExceptionsMessageRegExp="File ID differ.*")
+    @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "File ID differ.*")
     public void testInheritChannelFailsIfFileIdAreDifferent() throws IOException {
         Path tmp1 = testFiles.createTempFile();
         TrackedFile uf1 = new TrackedFile(null, tmp1);
@@ -100,7 +99,7 @@ public class TrackedFileTest extends TestBase {
         uf2.inheritChannel(uf1);
     }
 
-    @Test(expectedExceptions=IllegalStateException.class, expectedExceptionsMessageRegExp=".*has an open channel already.*")
+    @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = ".*has an open channel already.*")
     public void testInheritChannelFailsIfFileHasAnOpenChannel() throws IOException {
         Path tmp1 = testFiles.createTempFile();
         TrackedFile uf1 = new TrackedFile(null, tmp1);

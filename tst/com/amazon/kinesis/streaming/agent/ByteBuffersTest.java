@@ -3,31 +3,26 @@
  */
 package com.amazon.kinesis.streaming.agent;
 
+import com.amazon.kinesis.streaming.agent.ByteBuffers;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.StandardOpenOption;
+
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
-
-import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.StandardOpenOption;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.ByteBuffers;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 
 public class ByteBuffersTest {
 
@@ -46,7 +41,7 @@ public class ByteBuffersTest {
     @DataProvider
     public Object[][] hasArrayOrNot() {
         initBuffer();
-        return new Object[][] {
+        return new Object[][]{
                 {testBuffer.duplicate()},
                 {testBuffer.asReadOnlyBuffer()}, // hasArray will return false
         };

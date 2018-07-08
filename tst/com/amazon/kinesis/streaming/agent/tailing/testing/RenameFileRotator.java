@@ -3,19 +3,18 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import lombok.ToString;
+
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import javax.annotation.concurrent.NotThreadSafe;
-
-import lombok.ToString;
 
 /**
  * Generates files and rotates them by renaming the existing files.
  */
 @NotThreadSafe
-@ToString(callSuper=true)
+@ToString(callSuper = true)
 public class RenameFileRotator extends FileRotator {
 
     public RenameFileRotator(Path dir, String prefix) {
@@ -25,7 +24,7 @@ public class RenameFileRotator extends FileRotator {
     @Override
     protected Path rotateOrCreateNewFile() throws IOException {
         // if there's an existing file, rotate it
-        if(!activeFiles.isEmpty() && Files.exists(getFile(0)))
+        if (!activeFiles.isEmpty() && Files.exists(getFile(0)))
             rotateFileName(0);
         Path newPath = getNewFilePath();
         logger.debug("Creating new file {}", newPath);

@@ -3,18 +3,16 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import lombok.ToString;
+
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ThreadLocalRandom;
-
-import javax.annotation.concurrent.NotThreadSafe;
-
-import lombok.ToString;
-
-import com.amazon.kinesis.streaming.agent.testing.TestUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 /**
  * Copies content of current file to a new file and truncates current file.
@@ -22,7 +20,7 @@ import com.google.common.base.Throwables;
  * <code>copytruncate</code> option.
  */
 @NotThreadSafe
-@ToString(callSuper=true)
+@ToString(callSuper = true)
 public class TruncateFileRotator extends FileRotator {
     private long lastPreRotationSize = -1;
 
@@ -33,10 +31,10 @@ public class TruncateFileRotator extends FileRotator {
     @Override
     protected Path rotateOrCreateNewFile() throws IOException {
         // if there are old files, rotate their names
-        if(activeFiles.size() > 1) {
+        if (activeFiles.size() > 1) {
             rotateFileName(1);
         }
-        if(!activeFiles.isEmpty() && Files.exists(getFile(0))) {
+        if (!activeFiles.isEmpty() && Files.exists(getFile(0))) {
             // if there's an existing file, copy/truncate it
             Path currentPath = getFile(0);
             Path rotatedPath = getFilePathAfterRotation(0);
@@ -57,9 +55,9 @@ public class TruncateFileRotator extends FileRotator {
 
     @Override
     protected int writeDataToLatestFileBeforeRotation() {
-        if(!activeFiles.isEmpty()) {
+        if (!activeFiles.isEmpty()) {
             try {
-                if(Files.exists(getLatestFile()))
+                if (Files.exists(getLatestFile()))
                     lastPreRotationSize = Files.size(getLatestFile());
             } catch (IOException e) {
                 throw Throwables.propagate(e);
@@ -79,7 +77,7 @@ public class TruncateFileRotator extends FileRotator {
         // Our code does not currently handle the case where the truncated file
         // is filled up to a size larger than its previous size.
         long dataSizeToWrite = (long) (minNewFileSize * ThreadLocalRandom.current().nextDouble(1.5, 2));
-        if(lastPreRotationSize > 0 && dataSizeToWrite >= lastPreRotationSize) {
+        if (lastPreRotationSize > 0 && dataSizeToWrite >= lastPreRotationSize) {
             dataSizeToWrite = lastPreRotationSize - 1;
             logger.debug("Limiting new file size to {} to make sure it's smaller than size before rotation ({})",
                     dataSizeToWrite, lastPreRotationSize);

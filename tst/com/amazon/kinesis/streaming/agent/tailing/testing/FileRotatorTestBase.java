@@ -3,20 +3,19 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import com.amazon.kinesis.streaming.agent.tailing.FileId;
+import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
+import com.google.common.base.Throwables;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.tailing.FileId;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
-import com.google.common.base.Throwables;
 
 /**
  * Unit tests expected to pass for all implementations of {@link FileRotator}.
@@ -43,17 +42,17 @@ public abstract class FileRotatorTestBase extends TestBase {
     }
 
     private void assertRotatorPoliciesAfterRotation(FileRotator rotator,
-            Path latestPathBeforeRotation,
-            FileId latestIdBeforeRotation) throws IOException {
+                                                    Path latestPathBeforeRotation,
+                                                    FileId latestIdBeforeRotation) throws IOException {
         // latest file
         Path latestPath = rotator.getLatestFile();
         FileId latestId = FileId.get(latestPath);
-        if(rotator.latestFileKeepsSameId()) {
+        if (rotator.latestFileKeepsSameId()) {
             Assert.assertEquals(latestId, latestIdBeforeRotation);
         } else {
             Assert.assertNotEquals(latestId, latestIdBeforeRotation);
         }
-        if(rotator.latestFileKeepsSamePath()) {
+        if (rotator.latestFileKeepsSamePath()) {
             Assert.assertEquals(latestPath, latestPathBeforeRotation);
         } else {
             Assert.assertNotEquals(latestPath, latestPathBeforeRotation);
@@ -62,12 +61,12 @@ public abstract class FileRotatorTestBase extends TestBase {
         // rotated file
         Path rotatedPath = rotator.getFile(1);
         FileId rotatedId = FileId.get(rotatedPath);
-        if(rotator.rotatedFileKeepsSameId()) {
+        if (rotator.rotatedFileKeepsSameId()) {
             Assert.assertEquals(rotatedId, latestIdBeforeRotation);
         } else {
             Assert.assertNotEquals(rotatedId, latestIdBeforeRotation);
         }
-        if(rotator.rotatedFileKeepsSamePath()) {
+        if (rotator.rotatedFileKeepsSamePath()) {
             Assert.assertEquals(rotatedPath, latestPathBeforeRotation);
         } else {
             Assert.assertNotEquals(rotatedPath, latestPathBeforeRotation);
@@ -79,7 +78,7 @@ public abstract class FileRotatorTestBase extends TestBase {
         Assert.assertTrue(rotatedTimestamp <= latestTimestamp);
     }
 
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testCreateFirstFile() throws IOException {
         FileRotator rotator = getFileRotator();
         Path rotated = rotator.rotate();
@@ -95,7 +94,7 @@ public abstract class FileRotatorTestBase extends TestBase {
         Assert.assertTrue(Files.size(actualNewFilePath) > 0);
     }
 
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testRotation() throws IOException {
         FileRotator rotator = getFileRotator();
 
@@ -117,7 +116,7 @@ public abstract class FileRotatorTestBase extends TestBase {
         Assert.assertTrue(Files.size(rotator.getLatestFile()) > 0);
     }
 
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testFilesDeletedWhenMaxFilesReached() throws IOException {
         final int maxFiles = 4;
         FileRotator rotator = getFileRotator(maxFiles);
@@ -127,7 +126,7 @@ public abstract class FileRotatorTestBase extends TestBase {
         Assert.assertEquals(rotator.getActiveFiles().size(), maxFiles);
 
         // keep track of the last 2 files
-        Path lastFile = rotator.getFile(maxFiles-1);
+        Path lastFile = rotator.getFile(maxFiles - 1);
         FileId lastFileId = FileId.get(lastFile);
 
         Path nextToLastFile = rotator.getFile(maxFiles - 2);
@@ -139,14 +138,14 @@ public abstract class FileRotatorTestBase extends TestBase {
         Assert.assertEquals(rotator.getActiveFiles().size(), maxFiles);
 
         // and last file now is what used to be next-to-last
-        Path newLastFile = rotator.getFile(maxFiles-1);
+        Path newLastFile = rotator.getFile(maxFiles - 1);
         FileId newLastFileId = FileId.get(newLastFile);
         long newLastTimestamp = Files.getLastModifiedTime(newLastFile).toMillis();
         Assert.assertEquals(newLastFileId, nextToLastFileId);
         Assert.assertEquals(newLastTimestamp, nextToLastTimestamp);
 
         // make sure the old file is nowhere to be found on the filesystem
-        for(Path p : listFiles(rotator.getDir())) {
+        for (Path p : listFiles(rotator.getDir())) {
             Assert.assertNotEquals(
                     FileId.get(p),
                     lastFileId,
@@ -156,7 +155,7 @@ public abstract class FileRotatorTestBase extends TestBase {
         }
     }
 
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testMultipleRotations() throws IOException {
         final int maxFiles = 4;
         int rotations = maxFiles - 1;
@@ -178,7 +177,7 @@ public abstract class FileRotatorTestBase extends TestBase {
         }
     }
 
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testGetMaxInputFileIndex() throws IOException {
         // This test is valid for all except CopyFileRotator. See CopyFileRotatorTest.
         FileRotator rotator = getFileRotator();
@@ -202,7 +201,7 @@ public abstract class FileRotatorTestBase extends TestBase {
         List<Path> result = new ArrayList<>();
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dir)) {
             for (Path p : directoryStream) {
-                if(!Files.isDirectory(p)) {
+                if (!Files.isDirectory(p)) {
                     result.add(p);
                 }
             }

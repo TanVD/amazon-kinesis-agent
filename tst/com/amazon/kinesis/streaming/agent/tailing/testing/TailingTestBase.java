@@ -3,55 +3,39 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
-
-import lombok.Cleanup;
-import lombok.Getter;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.testng.annotations.BeforeMethod;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.ByteBuffers;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseConstants;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
-import com.amazon.kinesis.streaming.agent.tailing.IRecord;
-import com.amazon.kinesis.streaming.agent.tailing.RecordBuffer;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
+import com.amazon.kinesis.streaming.agent.tailing.*;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import lombok.Cleanup;
+import lombok.Getter;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.testng.annotations.BeforeMethod;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public abstract class TailingTestBase extends TestBase {
     public static final String DEFAULT_TEST_RECORD_REGEX_PATTERN = ".+\\t\\d+\\t";
 
     public static abstract class FileRotatorFactory {
-        @Getter long targetFileSize;
-        @Getter String prefix = "app.log";
-        @Getter int maxFilesToKeepOnDisk = FileRotator.DEFAULT_MAX_FILES_TO_KEEP_ON_DISK;
+        @Getter
+        long targetFileSize;
+        @Getter
+        String prefix = "app.log";
+        @Getter
+        int maxFilesToKeepOnDisk = FileRotator.DEFAULT_MAX_FILES_TO_KEEP_ON_DISK;
 
         public FileRotatorFactory() {
             this(FileRotator.DEFAULT_MIN_ROTATED_FILE_SIZE_BYTES);
@@ -154,7 +138,7 @@ public abstract class TailingTestBase extends TestBase {
     protected TrackedFile sourceFileForTestRecords;
     protected long sourceFileForTestRecordsOffset;
 
-    @BeforeMethod(alwaysRun=true)
+    @BeforeMethod(alwaysRun = true)
     public void cleanupTestRecord() {
         sourceFileForTestRecords = null;
         sourceFileForTestRecordsOffset = 0;
@@ -194,7 +178,7 @@ public abstract class TailingTestBase extends TestBase {
 
     protected RecordBuffer<FirehoseRecord> getTestBuffer(FileFlow<FirehoseRecord> flow, int nrecords, RecordGenerator generator) {
         RecordBuffer<FirehoseRecord> buffer = new RecordBuffer<FirehoseRecord>(flow);
-        while(nrecords > 0) {
+        while (nrecords > 0) {
             buffer.add(getTestRecord(flow, generator));
             --nrecords;
         }
@@ -241,7 +225,7 @@ public abstract class TailingTestBase extends TestBase {
     }
 
     protected void assertOutputFileRecordsMatchInputRecords(Path outputFile, int maxRecordSize,
-            int expectedOversizedRecordcount, List<? extends IRecord> expected) throws IOException {
+                                                            int expectedOversizedRecordcount, List<? extends IRecord> expected) throws IOException {
         assertRecordsMatch(getLines(null, outputFile), recordsToStrings(expected, maxRecordSize), 0,
                 maxRecordSize, expectedOversizedRecordcount);
     }
@@ -252,13 +236,13 @@ public abstract class TailingTestBase extends TestBase {
     }
 
     protected void assertOutputFileRecordsMatchInputFiles(Path outputFile, int skippedInputRecords, int maxRecordSize,
-            int expectedOversizedRecordcount, Path... files) throws IOException {
+                                                          int expectedOversizedRecordcount, Path... files) throws IOException {
         List<String> expected = getLines(null, files);
         assertRecordsMatch(getLines(null, outputFile), expected, skippedInputRecords, maxRecordSize, expectedOversizedRecordcount);
     }
 
     protected void assertOutputFileRecordsMatchInputFiles(Path outputFile, int maxRecordSize,
-            int expectedOversizedRecordcount, Path... files) throws IOException {
+                                                          int expectedOversizedRecordcount, Path... files) throws IOException {
         assertOutputFileRecordsMatchInputFiles(outputFile, 0, maxRecordSize, expectedOversizedRecordcount, files);
     }
 
@@ -272,7 +256,7 @@ public abstract class TailingTestBase extends TestBase {
 
 
     protected void assertRecordsMatchInputFiles(List<? extends IRecord> actual, int maxRecordSize,
-            int expectedOversizedRecordcount, Path... files) throws IOException {
+                                                int expectedOversizedRecordcount, Path... files) throws IOException {
         List<String> expected = new ArrayList<>(actual.size());
         getLines(expected, files);
         assertRecordsMatch(recordsToStrings(actual, maxRecordSize), expected, 0, maxRecordSize, expectedOversizedRecordcount);
@@ -343,8 +327,8 @@ public abstract class TailingTestBase extends TestBase {
 
         // Now, the lists should be identical
         int actualOversizedRecordCount = 0;
-        for(int i = 0; i < actual.size(); ++i) {
-            if(maxRecordSize <= 0 || expected.get(i).length() <= maxRecordSize) {
+        for (int i = 0; i < actual.size(); ++i) {
+            if (maxRecordSize <= 0 || expected.get(i).length() <= maxRecordSize) {
                 assertEquals(actual.get(i), expected.get(i + skippedExpectedRecords), "Record " + i + " does not match!");
             } else {
                 ++actualOversizedRecordCount;
@@ -352,7 +336,7 @@ public abstract class TailingTestBase extends TestBase {
                 assertEquals(actual.get(i), expected.get(i + skippedExpectedRecords).substring(0, maxRecordSize - 1) + "\n", "Record " + i + " does not match!");
             }
         }
-        if(expectedOversizedRecordcount >= 0)
+        if (expectedOversizedRecordcount >= 0)
             assertEquals(actualOversizedRecordCount, expectedOversizedRecordcount);
     }
 
@@ -365,9 +349,9 @@ public abstract class TailingTestBase extends TestBase {
 
         // Skip the first records that don't match
         int index = 0;
-        while(index < expected.size()) {
+        while (index < expected.size()) {
             if (expected.get(index).equals(actual.get(0)))
-               break;
+                break;
             ++index;
         }
         int missingAtBeginning = index;
@@ -375,21 +359,21 @@ public abstract class TailingTestBase extends TestBase {
 
         // Now, count the records that match...
         int missingInMiddle = 0;
-        for(; index < expected.size() && index - missingAtBeginning < actual.size(); ++index) {
-            if(!actual.get(index - missingAtBeginning).equals(expected.get(index)))
+        for (; index < expected.size() && index - missingAtBeginning < actual.size(); ++index) {
+            if (!actual.get(index - missingAtBeginning).equals(expected.get(index)))
                 ++missingInMiddle;
         }
         int equal = index - missingAtBeginning - missingInMiddle;
         int missingAtEnd = expected.size() - index;
         logger.debug("After index {}, {} matched and {} did not, " +
-        		"and the last {} records were missing " +
-        		"(actual size: {}, expected size: {}).",
-        		missingAtBeginning, equal, missingInMiddle,
-        		missingAtEnd, actual.size(), expected.size());
+                        "and the last {} records were missing " +
+                        "(actual size: {}, expected size: {}).",
+                missingAtBeginning, equal, missingInMiddle,
+                missingAtEnd, actual.size(), expected.size());
         assertTrue(equal <= actual.size());
 
-        double missingRatio = ((double)missingAtBeginning + missingInMiddle + missingAtEnd) / expected.size();
-        assertTrue(missingRatio <= maxMissingRatio, String.format("Missing records (%d%%) exceed allowed (%d%%)", (int)(missingRatio*100), (int)(maxMissingRatio*100)));
+        double missingRatio = ((double) missingAtBeginning + missingInMiddle + missingAtEnd) / expected.size();
+        assertTrue(missingRatio <= maxMissingRatio, String.format("Missing records (%d%%) exceed allowed (%d%%)", (int) (missingRatio * 100), (int) (maxMissingRatio * 100)));
 
         return missingRatio;
     }
@@ -406,7 +390,7 @@ public abstract class TailingTestBase extends TestBase {
 
     protected List<String> recordsToStrings(List<? extends IRecord> records, int maxRecordSize) {
         List<String> strings = new ArrayList<>(records.size());
-        for(IRecord record : records) {
+        for (IRecord record : records) {
             String strRecord = ByteBuffers.toString(record.data(), StandardCharsets.UTF_8);
             // Truncate the record to the given size if it's too long
             if (maxRecordSize >= 0 && strRecord.length() > maxRecordSize) {
@@ -424,7 +408,7 @@ public abstract class TailingTestBase extends TestBase {
             scanner.useDelimiter(pattern);
             String recordPattern;
             String recordData;
-            while((recordPattern = scanner.findWithinHorizon(pattern, 0)) != null){
+            while ((recordPattern = scanner.findWithinHorizon(pattern, 0)) != null) {
                 if (scanner.hasNext() && (recordData = scanner.next()) != null) {
                     records.add(recordPattern + recordData);
                 }

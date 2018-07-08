@@ -3,25 +3,23 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.util.concurrent.TimeUnit;
-
-import lombok.Cleanup;
-
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.Agent;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
 import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender;
+import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TestAgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.google.common.base.Stopwatch;
+import lombok.Cleanup;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.util.concurrent.TimeUnit;
 
 public class AgentEndToEndTest extends TailingTestBase {
     private static final long TEST_DURATION_MILLIS = TimeUnit.MINUTES.toMillis(6);
@@ -32,14 +30,14 @@ public class AgentEndToEndTest extends TailingTestBase {
         //       any particular combination that you want to analyze further.
 
         final int fileSize = 2 * 1024 * 1024;
-        Object[][] rotators = new Object[][] {
+        Object[][] rotators = new Object[][]{
                 {new TruncateFileRotatorFactory(fileSize)},
                 //{new RenameFileRotatorFactory(fileSize)},
                 //{new CreateFileRotatorFactory(fileSize)},
                 //{new CopyFileRotatorFactory(fileSize)},
         };
 
-        Object[][] senders = new Object[][] {
+        Object[][] senders = new Object[][]{
                 //{new FileSender.PerfectFileSenderFactory<FirehoseRecord>()},
                 //{new FileSender.FileSenderWithHighLatencyFactory<FirehoseRecord>()},
                 //{new FileSender.FileSenderWithPartialFailuresFactory<FirehoseRecord>()},
@@ -54,18 +52,18 @@ public class AgentEndToEndTest extends TailingTestBase {
         return TestUtils.crossTestParameters(rotators, senders);
     }
 
-    @Test(enabled=false, groups={"integration"},
-            dataProvider="rotatorsAndSenders",
-            description="Long running test that writes tons of records to multiple flows and validates that all is well.")
+    @Test(enabled = false, groups = {"integration"},
+            dataProvider = "rotatorsAndSenders",
+            description = "Long running test that writes tons of records to multiple flows and validates that all is well.")
     public void testLongRunningEndToEndAgent(
             final FileRotatorFactory rotatorFactory,
             final FileSenderFactory<FirehoseRecord> fileSenderFactory) throws Exception {
         runTest(TEST_DURATION_MILLIS, rotatorFactory, fileSenderFactory, "AgentEndToEndTest.json", 0.10);
     }
 
-    @Test(enabled=false, groups={"integration"},
-            dataProvider="rotatorsAndSenders",
-            description="Long running test that writes tons and tons of records to multiple flows and validates that all is well.")
+    @Test(enabled = false, groups = {"integration"},
+            dataProvider = "rotatorsAndSenders",
+            description = "Long running test that writes tons and tons of records to multiple flows and validates that all is well.")
     public void testLongRunningEndToEndAgentHighThroughput(
             final FileRotatorFactory rotatorFactory,
             final FileSenderFactory<FirehoseRecord> fileSenderFactory) throws Exception {
@@ -90,7 +88,7 @@ public class AgentEndToEndTest extends TailingTestBase {
         agent.awaitRunning();
 
         Stopwatch timer = Stopwatch.createStarted();
-        while(timer.elapsed(TimeUnit.MILLISECONDS) < duration) {
+        while (timer.elapsed(TimeUnit.MILLISECONDS) < duration) {
             Thread.sleep(10_000);
         }
         context.stopFileGenerators();
@@ -99,11 +97,11 @@ public class AgentEndToEndTest extends TailingTestBase {
         Thread.sleep(context.shutdownTimeoutMillis());
         agent.stopAsync();
         agent.awaitTerminated();
-        for(FileFlow<?> flow : context.flows()) {
+        for (FileFlow<?> flow : context.flows()) {
             double missingRatio = assertOutputFileRecordsMatchInputFilesApproximately(
                     context.getOutputFile(flow), maxMissingRatio,
                     context.getInputFiles(flow));
-            logger.debug("{}: Missing percent: {}%", flow.getId(), (int)(missingRatio * 100));
+            logger.debug("{}: Missing percent: {}%", flow.getId(), (int) (missingRatio * 100));
         }
     }
 }

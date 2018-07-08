@@ -3,20 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
@@ -25,6 +11,18 @@ import com.amazon.kinesis.streaming.agent.tailing.RecordBuffer;
 import com.amazon.kinesis.streaming.agent.tailing.testing.RecordGenerator;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
 import com.google.common.base.Stopwatch;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
+import static org.testng.Assert.assertTrue;
 
 /**
  * TODO: Add tests for thread-safety of implementation.
@@ -56,7 +54,7 @@ public class PublishingQueueTest extends TailingTestBase {
 
     private List<FirehoseRecord> getTestRecords(int n) {
         List<FirehoseRecord> result = new ArrayList<>(n);
-        for(int i = 0; i < n; ++i)
+        for (int i = 0; i < n; ++i)
             result.add(getTestRecord(flow));
         return result;
     }
@@ -66,7 +64,7 @@ public class PublishingQueueTest extends TailingTestBase {
         List<FirehoseRecord> records = getTestRecords(n);
         // SANITYCHECK
         assertEquals(q.pendingRecords(), 0);
-        for(FirehoseRecord record : records)
+        for (FirehoseRecord record : records)
             assertTrue(q.offerRecord(record, false));
         // SANITYCHECK
         assertEquals(q.pendingRecords(), n);
@@ -131,7 +129,7 @@ public class PublishingQueueTest extends TailingTestBase {
         RecordGenerator generator = new RecordGenerator(recordSize, recordSizeJitter);
         long totalBytes = 0;
         int recordCount = 0;
-        while(totalBytes + recordSize <= flow.getMaxBufferSizeBytes()) {
+        while (totalBytes + recordSize <= flow.getMaxBufferSizeBytes()) {
             FirehoseRecord record = getTestRecord(flow, generator);
             Assert.assertTrue(q.offerRecord(record));
             ++recordCount;
@@ -171,7 +169,7 @@ public class PublishingQueueTest extends TailingTestBase {
         final double recordSizeJitter = 0.0;
         RecordGenerator generator = new RecordGenerator(recordSize, recordSizeJitter);
         long totalBytes = 0;
-        for(int i = 0; i < recordCount; ++i) {
+        for (int i = 0; i < recordCount; ++i) {
             FirehoseRecord record = getTestRecord(flow, generator);
             Assert.assertTrue(q.offerRecord(record));
             totalBytes += record.lengthWithOverhead();
@@ -231,7 +229,7 @@ public class PublishingQueueTest extends TailingTestBase {
         final double recordSizeJitter = 0.0;
         RecordGenerator generator = new RecordGenerator(recordSize, recordSizeJitter);
         long totalBytes = 0;
-        for(int i = 0; i < recordCount; ++i) {
+        for (int i = 0; i < recordCount; ++i) {
             FirehoseRecord record = getTestRecord(flow, generator);
             Assert.assertTrue(q.offerRecord(record));
             totalBytes += record.lengthWithOverhead();
@@ -304,13 +302,13 @@ public class PublishingQueueTest extends TailingTestBase {
         Assert.assertEquals(q.totalBytes(), 0);
     }
 
-    @Test(timeOut=TEST_TIMEOUT)
+    @Test(timeOut = TEST_TIMEOUT)
     public void testBlockingOfferRecordWithFullQueue() throws Exception {
         PublishingQueue<FirehoseRecord> q = getTestQueue();
 
         // Fill the queue up
         Stopwatch timer = Stopwatch.createStarted();
-        while(q.size() < q.capacity()) {
+        while (q.size() < q.capacity()) {
             queueAndFlushBuffer(q);
         }
         Assert.assertEquals(q.size(), q.capacity());
@@ -323,7 +321,7 @@ public class PublishingQueueTest extends TailingTestBase {
         final double recordSizeJitter = 0.0;
         RecordGenerator generator = new RecordGenerator(recordSize, recordSizeJitter);
         long totalBytes = 0;
-        for(int i = 0; i < recordCount; ++i) {
+        for (int i = 0; i < recordCount; ++i) {
             FirehoseRecord record = getTestRecord(flow, generator);
             Assert.assertTrue(q.offerRecord(record, true));
             totalBytes += record.lengthWithOverhead();
@@ -359,13 +357,13 @@ public class PublishingQueueTest extends TailingTestBase {
     }
 
 
-    @Test(timeOut=TEST_TIMEOUT)
+    @Test(timeOut = TEST_TIMEOUT)
     public void testNonBlockingOfferRecordWithFullQueue() throws Exception {
         PublishingQueue<FirehoseRecord> q = getTestQueue();
 
         // Fill the queue up
         Stopwatch timer = Stopwatch.createStarted();
-        while(q.size() < q.capacity()) {
+        while (q.size() < q.capacity()) {
             queueAndFlushBuffer(q);
         }
         Assert.assertEquals(q.size(), q.capacity());
@@ -378,7 +376,7 @@ public class PublishingQueueTest extends TailingTestBase {
         final double recordSizeJitter = 0.0;
         RecordGenerator generator = new RecordGenerator(recordSize, recordSizeJitter);
         long totalBytes = 0;
-        for(int i = 0; i < recordCount; ++i) {
+        for (int i = 0; i < recordCount; ++i) {
             FirehoseRecord record = getTestRecord(flow, generator);
             Assert.assertTrue(q.offerRecord(record, false));
             totalBytes += record.lengthWithOverhead();
@@ -413,7 +411,7 @@ public class PublishingQueueTest extends TailingTestBase {
         Assert.assertEquals(q.pendingRecords(), 1);
     }
 
-//    @Test(timeOut=TEST_TIMEOUT)
+    //    @Test(timeOut=TEST_TIMEOUT)
 //    public void testOffer() throws Exception {
 //        PublishingQueue<FirehoseRecord> q = getTestQueue();
 //        Stopwatch timer = Stopwatch.createStarted();
@@ -467,7 +465,7 @@ public class PublishingQueueTest extends TailingTestBase {
 //        Assert.assertTrue(timer.elapsed(TimeUnit.MILLISECONDS) < maxWaitOnFullQueue );
 //    }
 //
-    @Test(timeOut=TEST_TIMEOUT)
+    @Test(timeOut = TEST_TIMEOUT)
     public void testOfferForRetry() throws Exception {
         PublishingQueue<FirehoseRecord> q = getTestQueue();
         // Add few regular buffers
@@ -497,28 +495,28 @@ public class PublishingQueueTest extends TailingTestBase {
         Assert.assertEquals(q.totalBytes(), totalBytes + retryBuffer2.sizeBytesWithOverhead());
     }
 
-    @Test(timeOut=TEST_TIMEOUT)
+    @Test(timeOut = TEST_TIMEOUT)
     public void testOfferForRetryWithFullQueue() throws Exception {
         PublishingQueue<FirehoseRecord> q = getTestQueue();
         Stopwatch timer = Stopwatch.createStarted();
         // Fill up the queue
-        while(q.size() < q.capacity()) {
+        while (q.size() < q.capacity()) {
             queueAndFlushBuffer(q);
         }
 
         // Now offer for retry... should not block and should cause size() to go over capacity
         q.queueBufferForRetry(getTestBuffer(flow));
-        Assert.assertTrue(timer.elapsed(TimeUnit.MILLISECONDS) < maxWaitOnFullQueue );
+        Assert.assertTrue(timer.elapsed(TimeUnit.MILLISECONDS) < maxWaitOnFullQueue);
         Assert.assertEquals(q.size(), q.capacity() + 1);
 
         // Next call, same thing...
         timer = Stopwatch.createStarted();
         q.queueBufferForRetry(getTestBuffer(flow));
-        Assert.assertTrue(timer.elapsed(TimeUnit.MILLISECONDS) < maxWaitOnFullQueue );
+        Assert.assertTrue(timer.elapsed(TimeUnit.MILLISECONDS) < maxWaitOnFullQueue);
         Assert.assertEquals(q.size(), q.capacity() + 2);
     }
 
-    @Test(timeOut=TEST_TIMEOUT)
+    @Test(timeOut = TEST_TIMEOUT)
     public void testBlockingTake() throws Exception {
         PublishingQueue<FirehoseRecord> q = getTestQueue();
         // Put couple of buffers
@@ -557,7 +555,7 @@ public class PublishingQueueTest extends TailingTestBase {
         Assert.assertEquals(q.totalBytes(), 0);
     }
 
-    @Test(timeOut=TEST_TIMEOUT)
+    @Test(timeOut = TEST_TIMEOUT)
     public void testNonBlockingTake() throws Exception {
         PublishingQueue<FirehoseRecord> q = getTestQueue();
         // Put couple of buffers
@@ -596,7 +594,7 @@ public class PublishingQueueTest extends TailingTestBase {
         Assert.assertEquals(q.totalBytes(), 0);
     }
 
-    @Test(timeOut=TEST_TIMEOUT)
+    @Test(timeOut = TEST_TIMEOUT)
     public void testTakeWithRetryBuffers() throws Exception {
         PublishingQueue<FirehoseRecord> q = getTestQueue();
         // Put couple of regular (never-published) buffers
@@ -695,7 +693,7 @@ public class PublishingQueueTest extends TailingTestBase {
 
         // Fill the queue up
         Stopwatch timer = Stopwatch.createStarted();
-        while(q.size() < q.capacity()) {
+        while (q.size() < q.capacity()) {
             queueAndFlushBuffer(q);
         }
         Assert.assertEquals(q.size(), q.capacity());
@@ -708,7 +706,7 @@ public class PublishingQueueTest extends TailingTestBase {
         final double recordSizeJitter = 0.0;
         RecordGenerator generator = new RecordGenerator(recordSize, recordSizeJitter);
         long totalBytes = 0;
-        for(int i = 0; i < recordCount; ++i) {
+        for (int i = 0; i < recordCount; ++i) {
             FirehoseRecord record = getTestRecord(flow, generator);
             Assert.assertTrue(q.offerRecord(record));
             totalBytes += record.lengthWithOverhead();
@@ -738,31 +736,31 @@ public class PublishingQueueTest extends TailingTestBase {
         Assert.assertEquals(q.size(), q.capacity());
     }
 
-    @Test(enabled=false)
+    @Test(enabled = false)
     public void testTakeReturnsImmediatelyWhenNewBufferAdded() {
         // TODO: wait on #take, then call #offer and see that #take
         //       returns immediately afterwards
     }
 
-    @Test(enabled=false)
+    @Test(enabled = false)
     public void testTakeReturnsImmediatelyWhenRetryBufferAdded() {
         // TODO: wait on #take, then call #offerForRetry and see that
         //       #take returns immediately afterwards
     }
 
-    @Test(enabled=false)
+    @Test(enabled = false)
     public void testTakeReturnsImmediatelyWhenClosed() {
         // TODO: wait on #take, then call #close() and see that
         //       #take returns immediately afterwards
     }
 
-    @Test(enabled=false)
+    @Test(enabled = false)
     public void testTakeReturnsImmediatelyWhenEnoughRecordsAdded() {
         // TODO: wait on #take(), then call #offerRecord() multiple times and
         //       see that #take() returns when temp buffer is queued
     }
 
-    @Test(enabled=false)
+    @Test(enabled = false)
     public void testTotalRecordsAndBytes() {
         // TODO: call #offer, #offerRecord, #offerForRetry and see that record
         //       and byte counters are incremented. Then call #take and see that

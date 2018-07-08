@@ -3,23 +3,18 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-
+import com.amazon.kinesis.streaming.agent.ByteBuffers;
+import com.amazon.kinesis.streaming.agent.tailing.*;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
 import org.apache.commons.lang3.RandomUtils;
 import org.mockito.Mockito;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.amazon.kinesis.streaming.agent.ByteBuffers;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseConstants;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseFileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import static org.mockito.Mockito.when;
 
 public class FirehoseRecordTest extends TestBase {
 
@@ -37,7 +32,7 @@ public class FirehoseRecordTest extends TestBase {
         Assert.assertEquals(record.dataLength(), 200);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({"rawtypes", "unchecked"})
     @Test
     public void testTruncate() throws IOException {
         byte[] data = RandomUtils.nextBytes((FirehoseConstants.MAX_RECORD_SIZE_BYTES) + RandomUtils.nextInt(1, 100));

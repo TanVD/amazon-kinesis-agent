@@ -1,17 +1,20 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.metrics;
+
+import com.amazonaws.services.cloudwatch.model.MetricDatum;
+import com.amazonaws.services.cloudwatch.model.StatisticSet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,24 +23,21 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import com.amazonaws.services.cloudwatch.model.MetricDatum;
-import com.amazonaws.services.cloudwatch.model.StatisticSet;
-
 /**
  * Helper class for accumulating MetricDatums with the same name and dimensions.
- * 
+ *
  * @param <KeyType> can be a class or object defined by the user that stores information about a MetricDatum needed
- *        by the user.
- * 
- *        The following is a example of what a KeyType class might look like:
- *        class SampleKeyType {
- *              private long timeKeyCreated;
- *              private MetricDatum datum;
- *              public SampleKeyType(long timeKeyCreated, MetricDatum datum){
+ *                  by the user.
+ *                  <p>
+ *                  The following is a example of what a KeyType class might look like:
+ *                  class SampleKeyType {
+ *                  private long timeKeyCreated;
+ *                  private MetricDatum datum;
+ *                  public SampleKeyType(long timeKeyCreated, MetricDatum datum){
  *                  this.timeKeyCreated = timeKeyCreated;
  *                  this.datum = datum;
- *              }
- *        }
+ *                  }
+ *                  }
  */
 public class MetricAccumulatingQueue<KeyType> {
 
@@ -78,8 +78,8 @@ public class MetricAccumulatingQueue<KeyType> {
     /**
      * We use a queue and a map in this method. The reason for this is because, the queue will keep our metrics in
      * FIFO order and the map will provide us with constant time lookup to get the appropriate MetricDatum.
-     * 
-     * @param key metric key to be inserted into queue
+     *
+     * @param key   metric key to be inserted into queue
      * @param datum metric to be inserted into queue
      * @return a boolean depending on whether the datum was inserted into the queue
      */

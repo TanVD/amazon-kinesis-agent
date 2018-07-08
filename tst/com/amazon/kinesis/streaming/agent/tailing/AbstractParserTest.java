@@ -3,53 +3,31 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertSame;
-import static org.testng.Assert.assertTrue;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.ByteBuffers;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.processing.processors.AgentDataConverterChain;
-import com.amazon.kinesis.streaming.agent.processing.processors.LogToJSONDataConverter;
 import com.amazon.kinesis.streaming.agent.processing.processors.BracketsDataConverter;
+import com.amazon.kinesis.streaming.agent.processing.processors.LogToJSONDataConverter;
 import com.amazon.kinesis.streaming.agent.processing.processors.SingleLineDataConverter;
-import com.amazon.kinesis.streaming.agent.tailing.AbstractParser;
-import com.amazon.kinesis.streaming.agent.tailing.AbstractRecord;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.RegexSplitter;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
+import com.amazon.kinesis.streaming.agent.tailing.*;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow.InitialPosition;
 import com.amazon.kinesis.streaming.agent.tailing.testing.RecordGenerator;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+import static org.testng.Assert.*;
 
 public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends AbstractRecord> extends TailingTestBase {
     protected AgentContext context;
@@ -77,7 +55,7 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
                 assertNotEquals(record.data().limit(), 0);
             }
             records.add(record);
-            if(maxRecords > 0 && records.size() >= maxRecords)
+            if (maxRecords > 0 && records.size() >= maxRecords)
                 break;
             record = parser.readRecord();
         }
@@ -194,7 +172,7 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         int oldSize = records.size();
         records = parseAllRecords(parser, records);
         // Make sure we read one more record
-        assertEquals(records.size(), oldSize+1);
+        assertEquals(records.size(), oldSize + 1);
         assertRecordsMatchInputFiles(records, testFile);
         // Make sure no data was discarded
         verify(parser, never()).onDiscardedData(anyInt(), anyInt(), anyString());
@@ -434,9 +412,9 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         // Check that record boundaries are contiguous
         assertEquals(records.get(0).startOffset(), 0);
         assertEquals(records.get(0).endOffset(), records.get(0).dataLength());
-        for(int i = 1; i < records.size(); ++i) {
+        for (int i = 1; i < records.size(); ++i) {
             assertEquals(records.get(i).endOffset(), records.get(i).startOffset() + records.get(i).dataLength());
-            assertEquals(records.get(i).startOffset(), records.get(i-1).endOffset());
+            assertEquals(records.get(i).startOffset(), records.get(i - 1).endOffset());
         }
         // Make sure no data was discarded
         verify(parser, never()).onDiscardedData(anyInt(), anyInt(), anyString());
@@ -486,7 +464,7 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         // Make sure no data was discarded
         verify(parser, never()).onDiscardedData(anyInt(), anyInt(), anyString());
     }
-    
+
     @Test
     public void testBuildingRecordOfConvertedData() throws IOException {
         flow = spy(flow);
@@ -494,7 +472,7 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         Path testFile = testFiles.createTempFile();
         RecordGenerator generator = new RecordGenerator();
         final int expectedRecordCount = generator.appendDataToFile(testFile, getTestBytes());
-        
+
         P parser = buildParser();
         parser = spy(parser);
         TrackedFile file = new TrackedFile(flow, testFile);
@@ -504,13 +482,13 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         List<String> expectedRecords = getLines(null, testFile);
         assertEquals(actualRecords.size(), expectedRecordCount);
         assertTrue(actualRecords.size() > 0);  // SANITYCHECK: Ensure we didn't shoot blanks
-        
-        for(int i = 0; i < actualRecords.size(); i++) {
+
+        for (int i = 0; i < actualRecords.size(); i++) {
             String actualRecord = ByteBuffers.toString(actualRecords.get(i).data(), StandardCharsets.UTF_8);
             assertEquals(actualRecord, "{" + expectedRecords.get(i) + "}", "Record " + i + " does not match!");
         }
     }
-    
+
     @Test
     public void testConvertingMultiLineDataFromRealLog() throws IOException {
         final String testfileName = "pretty_printed_json";
@@ -530,18 +508,18 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         assertTrue(parser.switchParsingToFile(file));
         List<R> actualRecords = parseAllRecords(parser, null);
         List<String> expectedRecords = getLines(null, resultFile);
-        
+
         assertTrue(actualRecords.size() > 0);  // SANITYCHECK: Ensure we didn't shoot blanks
         assertEquals(actualRecords.size(), expectedRecords.size());
-        for(int i = 0; i < actualRecords.size(); i++) {
+        for (int i = 0; i < actualRecords.size(); i++) {
             String actualRecord = ByteBuffers.toString(actualRecords.get(i).data(), StandardCharsets.UTF_8);
             // getLines() preserves the NEWLINE at the end of each line
-            assertEquals(actualRecord, 
-                    expectedRecords.get(i).substring(0,  expectedRecords.get(i).length()-1) + "\n", 
+            assertEquals(actualRecord,
+                    expectedRecords.get(i).substring(0, expectedRecords.get(i).length() - 1) + "\n",
                     "Record " + i + " does not match!");
         }
     }
-    
+
     @SuppressWarnings("serial")
     @Test
     public void testParsingApacheLogFromRealLog() throws IOException {
@@ -564,25 +542,25 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         assertTrue(parser.switchParsingToFile(file));
         List<R> actualRecords = parseAllRecords(parser, null);
         List<String> expectedRecords = getLines(null, resultFile);
-        
+
         assertTrue(actualRecords.size() > 0);  // SANITYCHECK: Ensure we didn't shoot blanks
         assertEquals(actualRecords.size(), expectedRecords.size() + expectedSkippedRecords);
         int numSkippedRecord = 0;
-        for(int i = 0; i < actualRecords.size(); i++) {
+        for (int i = 0; i < actualRecords.size(); i++) {
             if (actualRecords.get(i).shouldSkip()) {
                 numSkippedRecord++;
                 continue;
             }
             String actualRecord = ByteBuffers.toString(actualRecords.get(i).data(), StandardCharsets.UTF_8);
             // getLines() preserves the NEWLINE at the end of each line
-            assertEquals(actualRecord, 
+            assertEquals(actualRecord,
                     expectedRecords.get(i - numSkippedRecord)
-                    .substring(0,  expectedRecords.get(i - numSkippedRecord).length()-1) + "\n", 
+                            .substring(0, expectedRecords.get(i - numSkippedRecord).length() - 1) + "\n",
                     "Record " + i + " does not match!");
         }
         assertEquals(numSkippedRecord, expectedSkippedRecords);
     }
-    
+
     @SuppressWarnings("serial")
     @Test
     public void testParsingSysLogFromRealLog() throws IOException {
@@ -605,25 +583,25 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         assertTrue(parser.switchParsingToFile(file));
         List<R> actualRecords = parseAllRecords(parser, null);
         List<String> expectedRecords = getLines(null, resultFile);
-        
+
         assertTrue(actualRecords.size() > 0);  // SANITYCHECK: Ensure we didn't shoot blanks
         assertEquals(actualRecords.size(), expectedRecords.size() + expectedSkippedRecords);
         int numSkippedRecord = 0;
-        for(int i = 0; i < actualRecords.size(); i++) {
+        for (int i = 0; i < actualRecords.size(); i++) {
             if (actualRecords.get(i).shouldSkip()) {
                 numSkippedRecord++;
                 continue;
             }
             String actualRecord = ByteBuffers.toString(actualRecords.get(i).data(), StandardCharsets.UTF_8);
             // getLines() preserves the NEWLINE at the end of each line
-            assertEquals(actualRecord, 
+            assertEquals(actualRecord,
                     expectedRecords.get(i - numSkippedRecord)
-                    .substring(0,  expectedRecords.get(i - numSkippedRecord).length()-1) + "\n", 
+                            .substring(0, expectedRecords.get(i - numSkippedRecord).length() - 1) + "\n",
                     "Record " + i + " does not match!");
         }
         assertEquals(numSkippedRecord, expectedSkippedRecords);
     }
-    
+
     @Test
     public void testSkipHeadersSmallerThanBufferSize() throws IOException {
         final int bytesToSkip = (int) (0.6 * getTestBufferSize());
@@ -812,7 +790,7 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         List<R> records = parseAllRecords(parser, null);
         assertEquals(records.size(), numRecords);
         assertSkipHeaderLinesRecordsMatchInputFiles(numHeaders, records, testFile1);
-        for(int i = 0; i < records.size(); ++i) {
+        for (int i = 0; i < records.size(); ++i) {
             assertTrue(ByteBuffers.toString(records.get(i).data(), StandardCharsets.UTF_8).contains("\tDATA\t"));
             assertSame(records.get(i).file(), file1);
         }
@@ -834,7 +812,7 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         records = parseAllRecords(parser, null);
         assertEquals(records.size(), numRecords2);
         assertSkipHeaderLinesRecordsMatchInputFiles(numHeaders, records, testFile2);
-        for(int i = 0; i < records.size(); ++i) {
+        for (int i = 0; i < records.size(); ++i) {
             assertTrue(ByteBuffers.toString(records.get(i).data(), StandardCharsets.UTF_8).contains("\tDATA\t"));
             assertSame(records.get(i).file(), file2);
         }
@@ -852,8 +830,8 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         assertTrue(parser.switchParsingToFile(file1));
 
         // Get and validate half the records
-        List<R> records = parseRecords(parser, numRecords/2, null);
-        assertEquals(records.size(), numRecords/2);
+        List<R> records = parseRecords(parser, numRecords / 2, null);
+        assertEquals(records.size(), numRecords / 2);
 
         // Now stop parsing, and validate state
         assertTrue(parser.stopParsing("Test"));
@@ -890,12 +868,14 @@ public abstract class AbstractParserTest<P extends AbstractParser<R>, R extends 
         generator.appendRecordsToFile(testFile1, numRecords);
         assertFalse(parser.isAtEndOfCurrentFile());
     }
-    
+
     protected P buildParser() {
-    	return buildParser(flow, getTestBufferSize());
+        return buildParser(flow, getTestBufferSize());
     }
-    
+
     protected abstract int getTestBytes();
+
     protected abstract int getTestBufferSize();
+
     protected abstract P buildParser(FileFlow<R> flow, int bufferSize);
 }

@@ -1,30 +1,17 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.config;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Nullable;
 
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -37,10 +24,17 @@ import com.google.common.primitives.Doubles;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 
+import javax.annotation.Nullable;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
+import java.util.*;
+
 /**
  * Class to handle reading configurations. A configuration is essentially a
  * <code>Map&lt;String, Object&gt;</code> that's interpreted by a configurator.
- *
+ * <p>
  * This class construnct a configuration map from a JSON stream (read from a
  * file, e.g.):
  * <code><pre>
@@ -49,7 +43,9 @@ import com.google.common.primitives.Longs;
  */
 public class Configuration {
 
-    /** The config map backing this reader instance. */
+    /**
+     * The config map backing this reader instance.
+     */
     private final Map<String, Object> configMap;
 
     /**
@@ -180,7 +176,7 @@ public class Configuration {
 
     /**
      * @return an unmodifiable copy of the map that's backing this reader
-     *         instance.
+     * instance.
      */
     public Map<String, Object> getConfigMap() {
         return Collections.unmodifiableMap(this.configMap);
@@ -189,7 +185,7 @@ public class Configuration {
     /**
      * @param key
      * @return <code>true</code> if configuration map contains the given key,
-     *         <code>false</code> otherwise.
+     * <code>false</code> otherwise.
      */
     public boolean containsKey(String key) {
         return this.configMap.containsKey(key);
@@ -203,10 +199,9 @@ public class Configuration {
      * @param key
      * @param clazz
      * @return
-     * @throws ConfigurationException
-     *             if this class does not know how to read and convert values of
-     *             the specified type, or if the provided key does not exist in
-     *             the configuration.
+     * @throws ConfigurationException if this class does not know how to read and convert values of
+     *                                the specified type, or if the provided key does not exist in
+     *                                the configuration.
      */
     public <T> T readScalar(String key, Class<T> clazz) {
         return getReader(clazz).read(key);
@@ -220,37 +215,34 @@ public class Configuration {
      * @param clazz
      * @param fallback
      * @return the config value at given key, or <code>fallback</code> if the
-     *         key does not exist in the configuration. Note that if the key
-     *         exists its value is returned, even if it's <code>null</code>.
-     * @throws ConfigurationException
-     *             if this class does not know how to read and convert values of
-     *             the specified type.
+     * key does not exist in the configuration. Note that if the key
+     * exists its value is returned, even if it's <code>null</code>.
+     * @throws ConfigurationException if this class does not know how to read and convert values of
+     *                                the specified type.
      */
     public <T> T readScalar(String key, Class<T> clazz, T fallback) {
         return getReader(clazz).read(key, fallback);
     }
 
     /**
-     *
      * @param enumType
      * @param key
      * @param fallback
      * @return the enum constant at given key, or <code>fallback</code> if the
-     *         key does not exist in the configuration.
-     * @throws ConfigurationException
-     *             if the enum type is <code>null</code> or the specified enum type 
-     *             has no constant with the specified value read from key
+     * key does not exist in the configuration.
+     * @throws ConfigurationException if the enum type is <code>null</code> or the specified enum type
+     *                                has no constant with the specified value read from key
      */
     public <E extends Enum<E>> E readEnum(Class<E> enumType, String key, E fallback) {
         String stringVal = readString(key, null);
-        if(stringVal != null) {
+        if (stringVal != null) {
             try {
                 return Enum.valueOf(enumType, stringVal);
             } catch (Exception e) {
                 throw new ConfigurationException(
                         String.format(
                                 "Value(%s) is not legally accepted by key: %s. " +
-                                "Legal values are %s",
+                                        "Legal values are %s",
                                 stringVal, key, Joiner.on(",").join(enumType.getEnumConstants())), e);
             }
         } else
@@ -258,23 +250,21 @@ public class Configuration {
     }
 
     /**
-     *
      * @param enumType
      * @param key
      * @return the enum constant at given key.
-     * @throws ConfigurationException
-     *             if the enum constant failed to be returned.
+     * @throws ConfigurationException if the enum constant failed to be returned.
      */
     public <E extends Enum<E>> E readEnum(Class<E> enumType, String key) {
         String stringVal = readString(key, null);
-        if(stringVal != null) {
+        if (stringVal != null) {
             try {
                 return Enum.valueOf(enumType, stringVal);
             } catch (Exception e) {
                 throw new ConfigurationException(
                         String.format(
                                 "Value(%s) is not legally accepted by key: %s. " +
-                                "Legal values are %s",
+                                        "Legal values are %s",
                                 stringVal, key, Joiner.on(",").join(enumType.getEnumConstants())), e);
             }
         } else
@@ -360,7 +350,6 @@ public class Configuration {
     }
 
     /**
-     *
      * @param key
      * @param itemType
      * @return
@@ -368,28 +357,27 @@ public class Configuration {
     public <T> List<T> readList(String key, Class<T> itemType) {
         return new ListReader<T>(itemType).read(key);
     }
-    
-    /**
-    * Return the fallback value whenever an exception is thrown
-    *
-    * @param key
-    * @param itemType
-    * @param fallback
-    * @return
-    */
-   public <T> List<T> readList(String key, Class<T> itemType, List<T> fallback) {
-       return new ListReader<T>(itemType).read(key, fallback);
-   }
 
     /**
+     * Return the fallback value whenever an exception is thrown
      *
+     * @param key
+     * @param itemType
+     * @param fallback
+     * @return
+     */
+    public <T> List<T> readList(String key, Class<T> itemType, List<T> fallback) {
+        return new ListReader<T>(itemType).read(key, fallback);
+    }
+
+    /**
      * @param key
      * @param itemType
      * @param itemConverter
      * @return
      */
     public <T> List<T> readList(String key, Class<T> itemType,
-            Function<Object, T> itemConverter) {
+                                Function<Object, T> itemConverter) {
         return new ListReader<T>(itemType, itemConverter).read(key);
     }
 
@@ -413,8 +401,7 @@ public class Configuration {
      * Helper class to parse configuration values and return expected types
      * after necessary conversion.
      *
-     * @param <T>
-     *            the expected return type.
+     * @param <T> the expected return type.
      */
     class ScalarValueReader<T> implements ValueReader<T> {
         protected final Class<T> clazz;
@@ -466,8 +453,7 @@ public class Configuration {
      * Reader for lists in configuration. It will apply the converter for each
      * scalar value in the list.
      *
-     * @param <T>
-     *            the type of the elements of the list.
+     * @param <T> the type of the elements of the list.
      */
     class ListReader<T> implements ValueReader<List<T>> {
         protected final Class<T> itemClazz;
@@ -549,6 +535,7 @@ public class Configuration {
 
     /**
      * Validates that a given value falls withing a range.
+     *
      * @param value
      * @param range
      * @param messageTemplate
@@ -556,8 +543,8 @@ public class Configuration {
      * @throws ConfigurationException if the value doesn't fall within the range.
      */
     public static <T extends Comparable<T>> void validateRange(T value,
-            Range<T> range, String label) {
-        if(!range.contains(value)) {
+                                                               Range<T> range, String label) {
+        if (!range.contains(value)) {
             String message = String.format("'%s' value %s is outside of valid range (%s)",
                     label, value.toString(), range.toString());
             throw new ConfigurationException(message);

@@ -3,23 +3,20 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.testng.Assert.assertEquals;
-
-import java.util.HashMap;
-
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.config.ConfigurationException;
 import com.amazon.kinesis.streaming.agent.tailing.KinesisConstants;
 import com.amazon.kinesis.streaming.agent.tailing.KinesisFileFlow;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.util.HashMap;
 
 public class KinesisFileFlowTest extends FileFlowTest<KinesisFileFlow> {
 
-	@Test
+    @Test
     public void testKinesisConfigurationDefaults() {
         AgentContext context = TestUtils.getTestAgentContext();
         KinesisFileFlow ff = buildFileFlow(context, getConfiguration("/tmp/testfile.log.*", "testdes"));
@@ -30,12 +27,12 @@ public class KinesisFileFlowTest extends FileFlowTest<KinesisFileFlow> {
         assertEquals(ff.getRetryMaxBackoffMillis(), KinesisConstants.DEFAULT_RETRY_MAX_BACKOFF_MILLIS);
         assertEquals(ff.getPartitionKeyOption(), KinesisConstants.PartitionKeyOption.RANDOM);
     }
-	
+
 
     @SuppressWarnings("serial")
-	@Test
-	public void testPartitionKeyOption() {
-	    AgentContext context = TestUtils.getTestAgentContext();
+    @Test
+    public void testPartitionKeyOption() {
+        AgentContext context = TestUtils.getTestAgentContext();
         final String file = "/var/log/message*";
         KinesisFileFlow ff1 = buildFileFlow(context, new Configuration(new HashMap<String, Object>() {{
             put("filePattern", file);
@@ -49,16 +46,16 @@ public class KinesisFileFlowTest extends FileFlowTest<KinesisFileFlow> {
         }}));
         assertEquals(ff1.getPartitionKeyOption(), KinesisConstants.PartitionKeyOption.DETERMINISTIC);
         assertEquals(ff2.getPartitionKeyOption(), KinesisConstants.PartitionKeyOption.RANDOM);
-	}
-    
-    @DataProvider(name="badPartitionKeyOptionInConfig")
-    public Object[][] testPartitionKeyOptionInConfigData(){
-        return new Object[][] { { "UNSUPPORTED" }, { "random" }, { "" } };
     }
-    
+
+    @DataProvider(name = "badPartitionKeyOptionInConfig")
+    public Object[][] testPartitionKeyOptionInConfigData() {
+        return new Object[][]{{"UNSUPPORTED"}, {"random"}, {""}};
+    }
+
     @SuppressWarnings("serial")
-    @Test(dataProvider="badPartitionKeyOptionInConfig",
-          expectedExceptions=ConfigurationException.class)
+    @Test(dataProvider = "badPartitionKeyOptionInConfig",
+            expectedExceptions = ConfigurationException.class)
     public void testWrongPartitionKeyOption(final String partitionKeyOption) {
         AgentContext context = TestUtils.getTestAgentContext();
         final String file = "/var/log/message*";
@@ -69,42 +66,42 @@ public class KinesisFileFlowTest extends FileFlowTest<KinesisFileFlow> {
         }}));
         ff.getPartitionKeyOption();
     }
-    
-    @DataProvider(name="badMaxBufferAgeMillisInConfig")
+
+    @DataProvider(name = "badMaxBufferAgeMillisInConfig")
     @Override
-    public Object[][] testMaxBufferAgeMillisInConfigData(){
-        return new Object[][] { { 0 }, { -1 },
-                { KinesisFileFlow.VALID_MAX_BUFFER_AGE_RANGE_MILLIS.lowerEndpoint() - 1 },
-                { KinesisFileFlow.VALID_MAX_BUFFER_AGE_RANGE_MILLIS.upperEndpoint() + 1 },
+    public Object[][] testMaxBufferAgeMillisInConfigData() {
+        return new Object[][]{{0}, {-1},
+                {KinesisFileFlow.VALID_MAX_BUFFER_AGE_RANGE_MILLIS.lowerEndpoint() - 1},
+                {KinesisFileFlow.VALID_MAX_BUFFER_AGE_RANGE_MILLIS.upperEndpoint() + 1},
         };
     }
 
-    @DataProvider(name="badMaxBufferSizeRecordsInConfig")
+    @DataProvider(name = "badMaxBufferSizeRecordsInConfig")
     @Override
-    public Object[][] testBadMaxBufferSizeRecordsInConfigData(){
-        return new Object[][] { { 0 }, { -1 },
-                { KinesisFileFlow.VALID_MAX_BUFFER_SIZE_RECORDS_RANGE.lowerEndpoint() - 1 },
-                { KinesisFileFlow.VALID_MAX_BUFFER_SIZE_RECORDS_RANGE.upperEndpoint() + 1 },
+    public Object[][] testBadMaxBufferSizeRecordsInConfigData() {
+        return new Object[][]{{0}, {-1},
+                {KinesisFileFlow.VALID_MAX_BUFFER_SIZE_RECORDS_RANGE.lowerEndpoint() - 1},
+                {KinesisFileFlow.VALID_MAX_BUFFER_SIZE_RECORDS_RANGE.upperEndpoint() + 1},
         };
     }
 
-    @DataProvider(name="badMaxBufferSizeBytesInConfig")
+    @DataProvider(name = "badMaxBufferSizeBytesInConfig")
     @Override
-    public Object[][] testMaxBufferSizeBytesInConfigData(){
-        return new Object[][] { { 0 }, { -1 },
-                { KinesisFileFlow.VALID_MAX_BUFFER_SIZE_BYTES_RANGE.lowerEndpoint() - 1 },
-                { KinesisFileFlow.VALID_MAX_BUFFER_SIZE_BYTES_RANGE.upperEndpoint() + 1 },
+    public Object[][] testMaxBufferSizeBytesInConfigData() {
+        return new Object[][]{{0}, {-1},
+                {KinesisFileFlow.VALID_MAX_BUFFER_SIZE_BYTES_RANGE.lowerEndpoint() - 1},
+                {KinesisFileFlow.VALID_MAX_BUFFER_SIZE_BYTES_RANGE.upperEndpoint() + 1},
         };
     }
 
-	@Override
-	protected String getDestinationKey() {
-		return KinesisConstants.DESTINATION_KEY;
-	}
+    @Override
+    protected String getDestinationKey() {
+        return KinesisConstants.DESTINATION_KEY;
+    }
 
-	@Override
-	protected KinesisFileFlow buildFileFlow(AgentContext context, Configuration config) {
-		return new KinesisFileFlow(context, config);
-	}
+    @Override
+    protected KinesisFileFlow buildFileFlow(AgentContext context, Configuration config) {
+        return new KinesisFileFlow(context, config);
+    }
 
 }

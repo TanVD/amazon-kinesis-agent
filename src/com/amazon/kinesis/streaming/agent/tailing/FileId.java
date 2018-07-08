@@ -1,27 +1,26 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
+
+import com.google.common.base.Preconditions;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
-import com.google.common.base.Preconditions;
 
 /**
  * Abstraction of a file identifier (independent from path). Current implementation
@@ -29,7 +28,8 @@ import com.google.common.base.Preconditions;
  */
 @EqualsAndHashCode
 public class FileId {
-    @Getter private final String id;
+    @Getter
+    private final String id;
 
     /**
      * @see #get(BasicFileAttributes)
@@ -48,9 +48,10 @@ public class FileId {
 
     /**
      * TODO: this might not be portable as we rely on inner representation of
-     *       the {@link BasicFileAttributes#fileKey()}
-     *       ({@linkplain UnixFileKey http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/7u40-b43/sun/nio/fs/UnixFileKey.java}
-     *       on Linux), which is not defined canonically anywhere.
+     * the {@link BasicFileAttributes#fileKey()}
+     * ({@linkplain UnixFileKey http://grepcode.com/file/repository.grepcode.com/java/root/jdk/openjdk/7u40-b43/sun/nio/fs/UnixFileKey.java}
+     * on Linux), which is not defined canonically anywhere.
+     *
      * @param attr
      * @return
      * @throws IOException

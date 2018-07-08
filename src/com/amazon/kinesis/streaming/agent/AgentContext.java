@@ -1,33 +1,17 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
 
 import com.amazon.kinesis.streaming.agent.config.AgentConfiguration;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
@@ -42,14 +26,25 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
+import com.amazonaws.services.kinesis.AmazonKinesisClient;
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehose;
 import com.amazonaws.services.kinesisfirehose.AmazonKinesisFirehoseClient;
-import com.amazonaws.services.kinesis.AmazonKinesisClient;
 import com.amazonaws.util.EC2MetadataUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Global context for the agent, including configuration, caches and transient
@@ -64,15 +59,17 @@ public class AgentContext extends AgentConfiguration implements IMetricsContext 
     @VisibleForTesting
     public final FileFlowFactory fileFlowFactory;
 
-    /** The listing of flows, ordered in order of appearance in configuration */
+    /**
+     * The listing of flows, ordered in order of appearance in configuration
+     */
     private final Map<String, FileFlow<?>> flows = new LinkedHashMap<>();
     private AmazonKinesisFirehose firehoseClient;
     private AmazonKinesisClient kinesisClient;
     private AmazonCloudWatch cloudwatchClient;
     private IMetricsContext metrics;
     private String instanceTag = null;
+
     /**
-     *
      * @param configuration
      * @throws ConfigurationException
      */
@@ -126,7 +123,7 @@ public class AgentContext extends AgentConfiguration implements IMetricsContext 
 
     /**
      * @return A new instance of a threadpool executor for sending data to
-     *         destination.
+     * destination.
      */
     public ThreadPoolExecutor createSendingExecutor() {
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("sender-%d").build();
@@ -162,25 +159,25 @@ public class AgentContext extends AgentConfiguration implements IMetricsContext 
     public synchronized AmazonKinesisFirehose getFirehoseClient() {
         if (firehoseClient == null) {
             firehoseClient = new AmazonKinesisFirehoseClient(
-            		getAwsCredentialsProvider(), getAwsClientConfiguration());
+                    getAwsCredentialsProvider(), getAwsClientConfiguration());
             if (!Strings.isNullOrEmpty(firehoseEndpoint()))
                 firehoseClient.setEndpoint(firehoseEndpoint());
         }
         return firehoseClient;
     }
-    
+
     public synchronized AmazonKinesisClient getKinesisClient() {
         if (kinesisClient == null) {
             kinesisClient = new AmazonKinesisClient(
                     getAwsCredentialsProvider(), getAwsClientConfiguration());
             if (!Strings.isNullOrEmpty(kinesisEndpoint()))
-            	kinesisClient.setEndpoint(kinesisEndpoint());
+                kinesisClient.setEndpoint(kinesisEndpoint());
         }
         return kinesisClient;
     }
 
     private synchronized IMetricsContext getMetricsContext() {
-        if(metrics == null) {
+        if (metrics == null) {
             metrics = new Metrics(this);
         }
         return metrics;
@@ -197,34 +194,34 @@ public class AgentContext extends AgentConfiguration implements IMetricsContext 
     }
 
     public AWSCredentialsProvider getAwsCredentialsProvider() {
-    	AWSCredentialsProvider credentialsProvider = new AgentAWSCredentialsProviderChain(this);
-    	final String assumeRoleARN = readString(ASSUME_ROLE_ARN, null);
-    	if (!Strings.isNullOrEmpty(assumeRoleARN)) {
-    		credentialsProvider = 
-    				getSTSAssumeRoleSessionCredentialsProvider(assumeRoleARN, 
-    						credentialsProvider);
-    	}
-    	return credentialsProvider;
+        AWSCredentialsProvider credentialsProvider = new AgentAWSCredentialsProviderChain(this);
+        final String assumeRoleARN = readString(ASSUME_ROLE_ARN, null);
+        if (!Strings.isNullOrEmpty(assumeRoleARN)) {
+            credentialsProvider =
+                    getSTSAssumeRoleSessionCredentialsProvider(assumeRoleARN,
+                            credentialsProvider);
+        }
+        return credentialsProvider;
     }
-    
+
     public STSAssumeRoleSessionCredentialsProvider getSTSAssumeRoleSessionCredentialsProvider(
-    		String roleARN, AWSCredentialsProvider credentialsProvider) {
-    	Preconditions.checkNotNull(credentialsProvider);
-    	final String stsEndpoint = stsEndpoint();
-    	final String roleExternalId = readString(ASSUME_ROLE_EXTERNAL_ID, null);
-    	
-    	STSAssumeRoleSessionCredentialsProvider.Builder builder = 
-    			new STSAssumeRoleSessionCredentialsProvider.Builder(roleARN, ASSUME_ROLE_SESSION)
-    					.withLongLivedCredentialsProvider(credentialsProvider)
-    					.withRoleSessionDurationSeconds(DEFAULT_ASSUME_ROLE_DURATION_SECONDS);
-    	if (!Strings.isNullOrEmpty(roleExternalId)) {
-    		builder = builder.withExternalId(roleExternalId);
-    	}
-    	if (!Strings.isNullOrEmpty(stsEndpoint)) {
-    		builder = builder.withServiceEndpoint(stsEndpoint);
-    	}
-    	
-    	return builder.build();
+            String roleARN, AWSCredentialsProvider credentialsProvider) {
+        Preconditions.checkNotNull(credentialsProvider);
+        final String stsEndpoint = stsEndpoint();
+        final String roleExternalId = readString(ASSUME_ROLE_EXTERNAL_ID, null);
+
+        STSAssumeRoleSessionCredentialsProvider.Builder builder =
+                new STSAssumeRoleSessionCredentialsProvider.Builder(roleARN, ASSUME_ROLE_SESSION)
+                        .withLongLivedCredentialsProvider(credentialsProvider)
+                        .withRoleSessionDurationSeconds(DEFAULT_ASSUME_ROLE_DURATION_SECONDS);
+        if (!Strings.isNullOrEmpty(roleExternalId)) {
+            builder = builder.withExternalId(roleExternalId);
+        }
+        if (!Strings.isNullOrEmpty(stsEndpoint)) {
+            builder = builder.withServiceEndpoint(stsEndpoint);
+        }
+
+        return builder.build();
     }
 
     public ClientConfiguration getAwsClientConfiguration() {
@@ -251,8 +248,8 @@ public class AgentContext extends AgentConfiguration implements IMetricsContext 
     public IMetricsScope beginScope() {
         return getMetricsContext().beginScope();
     }
-    
+
     public String getInstanceTag() {
-    	return instanceTag;
+        return instanceTag;
     }
 }

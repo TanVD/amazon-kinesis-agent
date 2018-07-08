@@ -3,22 +3,20 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Iterator;
-
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
 import com.amazon.kinesis.streaming.agent.tailing.RecordBuffer;
 import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.util.Iterator;
+
+import static org.testng.Assert.assertTrue;
 
 public class RecordBufferTest extends TailingTestBase {
     private AgentContext context;
@@ -87,7 +85,7 @@ public class RecordBufferTest extends TailingTestBase {
         buffer.add(record2);
         assertEquals(buffer.sizeBytes(),
                 record1.lengthWithOverhead() +
-                record2.lengthWithOverhead());
+                        record2.lengthWithOverhead());
         assertEquals(buffer.sizeRecords(), 2);
         assertEquals(buffer.isEmpty(), false);
     }

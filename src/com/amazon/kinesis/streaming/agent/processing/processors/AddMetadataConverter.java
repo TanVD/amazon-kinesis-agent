@@ -13,11 +13,6 @@
  */
 package com.amazon.kinesis.streaming.agent.processing.processors;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.LinkedHashMap;
-
 import com.amazon.kinesis.streaming.agent.ByteBuffers;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.processing.exceptions.DataConversionException;
@@ -28,24 +23,28 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.joda.time.DateTime;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Build record as JSON object with a "metadata" key for arbitrary KV pairs
- *   and "message" key with the raw data
- *
+ * and "message" key with the raw data
+ * <p>
  * Configuration looks like:
- *
- * { 
- *   "optionName": "ADDMETADATA",
- *   "metadata": {
- *     "key": "value",
- *     "foo": {
- *       "bar": "baz"
- *     }
- *   }
+ * <p>
+ * {
+ * "optionName": "ADDMETADATA",
+ * "metadata": {
+ * "key": "value",
+ * "foo": {
+ * "bar": "baz"
+ * }
+ * }
  * }
  *
  * @author zacharya
- *
  */
 public class AddMetadataConverter implements IDataConverter {
 
@@ -65,9 +64,9 @@ public class AddMetadataConverter implements IDataConverter {
     private final IJSONPrinter jsonProducer;
 
     public AddMetadataConverter(Configuration config) {
-      metadata = (Map<String, Object>) config.getConfigMap().get("metadata");
-      functions = (Map<String, String>) config.getConfigMap().get("functions");
-      jsonProducer = ProcessingUtilsFactory.getPrinter(config);
+        metadata = (Map<String, Object>) config.getConfigMap().get("metadata");
+        functions = (Map<String, String>) config.getConfigMap().get("functions");
+        jsonProducer = ProcessingUtilsFactory.getPrinter(config);
     }
 
     @Override

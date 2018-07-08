@@ -3,6 +3,19 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
+import com.amazon.kinesis.streaming.agent.AgentContext;
+import com.amazon.kinesis.streaming.agent.ByteBuffers;
+import com.amazon.kinesis.streaming.agent.config.Configuration;
+import com.amazon.kinesis.streaming.agent.tailing.*;
+import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpoint;
+import com.amazon.kinesis.streaming.agent.tailing.testing.*;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import lombok.Cleanup;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -11,29 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ThreadLocalRandom;
-
-import lombok.Cleanup;
-
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.ByteBuffers;
-import com.amazon.kinesis.streaming.agent.config.Configuration;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlowFactory;
-import com.amazon.kinesis.streaming.agent.tailing.FileId;
-import com.amazon.kinesis.streaming.agent.tailing.SourceFileTracker;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
-import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpoint;
-import com.amazon.kinesis.streaming.agent.tailing.testing.CopyFileRotator;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileRotator;
-import com.amazon.kinesis.streaming.agent.tailing.testing.RememberedTrackedFile;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TestableSourceFileTracker;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 
 public class SourceFileTrackerTest extends TailingTestBase {
     private static final int TEST_REPS = 2;
@@ -52,17 +42,17 @@ public class SourceFileTrackerTest extends TailingTestBase {
         return new TestableSourceFileTracker(rotator, flow, context);
     }
 
-    @DataProvider(name="rotators")
+    @DataProvider(name = "rotators")
     public Object[][] rotatorsProvider() {
-        return new Object[][] {
-                { new RenameFileRotatorFactory() },
-                { new CreateFileRotatorFactory() },
-                { new CopyFileRotatorFactory() },
-                { new TruncateFileRotatorFactory() },
+        return new Object[][]{
+                {new RenameFileRotatorFactory()},
+                {new CreateFileRotatorFactory()},
+                {new CopyFileRotatorFactory()},
+                {new TruncateFileRotatorFactory()},
         };
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testInitializeWithoutCheckpointOpensLatestFile(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         rotator.rotate(2);
@@ -75,7 +65,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         Assert.assertFalse(tracker.newerFilesPending());
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testInitializeWithCheckpointAndNoRotations(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         SourceFileTracker tracker = getTracker(rotator);
@@ -98,7 +88,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         Assert.assertFalse(tracker.newerFilesPending());
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testInitializeWithCheckpointAndRotation(FileRotatorFactory rotatorFactory) throws IOException {
         final int maxFilesToKeepOnDisk = 3;
         FileRotator rotator = rotatorFactory.create();
@@ -127,7 +117,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         Assert.assertTrue(rememberedFirstFile.hasSameContentHash(tracker.getCurrentOpenFile().getPath()));
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testInitializeWithCheckpointAndFileDisappearedAndAnotherFilePresent(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         SourceFileTracker tracker = getTracker(rotator);
@@ -152,7 +142,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         Assert.assertFalse(rememberedFirstFile.hasSameContentHash(tracker.getCurrentOpenFile().getPath()));
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testInitializeWithCheckpointAndFileDisappearedAndNoMoreFilesPresent(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         SourceFileTracker tracker = getTracker(rotator);
@@ -171,7 +161,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         Assert.assertNull(tracker.getCurrentOpenFile());
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testRefreshWithNoChangesInFiles(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         rotator.rotate(2);
@@ -195,7 +185,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         tracker.assertStillTrackingRememberedFileWithoutRotation();
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testRefreshWithNoFilesFound(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         SourceFileTracker tracker = getTracker(rotator);
@@ -216,7 +206,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         Assert.assertFalse(tracker.newerFilesPending());
     }
 
-    @Test(dataProvider="rotators", invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(dataProvider = "rotators", invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testRefreshAfterRotation(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         // create few files
@@ -254,7 +244,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         tracker.assertStillTrackingRememberedFile();
     }
 
-    @Test(dataProvider="rotators", invocationCount=TEST_REPS, skipFailedInvocations=true)
+    @Test(dataProvider = "rotators", invocationCount = TEST_REPS, skipFailedInvocations = true)
     public void testRefreshAfterMultipleRotationsButBeforeCurrentFileIsDeleted(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         // create new files
@@ -293,7 +283,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         tracker.assertStillTrackingRememberedFileAfterRotation();
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testCurrentFileDeletedCausesTailingToBeReset(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         // create new files
@@ -324,7 +314,7 @@ public class SourceFileTrackerTest extends TailingTestBase {
         tracker.assertRememberedFileWasClosed();
     }
 
-    @Test(dataProvider="rotators")
+    @Test(dataProvider = "rotators")
     public void testDeletingAllFilesWillStopTailingCompletely(FileRotatorFactory rotatorFactory) throws IOException {
         FileRotator rotator = rotatorFactory.create();
         // create new files

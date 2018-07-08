@@ -3,14 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.metrics;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.metrics.CWMetricKey;
 import com.amazon.kinesis.streaming.agent.metrics.CWPublisherRunnable;
 import com.amazon.kinesis.streaming.agent.metrics.ICWMetricsPublisher;
@@ -18,6 +10,13 @@ import com.amazon.kinesis.streaming.agent.metrics.MetricDatumWithKey;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
 import com.amazonaws.services.cloudwatch.model.MetricDatum;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CWPublisherRunnableTest extends TestBase {
 

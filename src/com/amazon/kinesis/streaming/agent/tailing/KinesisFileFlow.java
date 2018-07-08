@@ -1,34 +1,34 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import lombok.Getter;
-import lombok.ToString;
 
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.tailing.KinesisConstants.PartitionKeyOption;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
 import com.google.common.collect.Range;
+import lombok.Getter;
+import lombok.ToString;
+
+import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
 /**
  * An implementation of a {@link FileFlow} where the destination is a kinesis stream.
  */
-@ToString(callSuper=true)
+@ToString(callSuper = true)
 public class KinesisFileFlow extends FileFlow<KinesisRecord> {
     public static final Range<Long> VALID_MAX_BUFFER_AGE_RANGE_MILLIS = Range.closed(
             TimeUnit.SECONDS.toMillis(1), TimeUnit.MINUTES.toMillis(15));
@@ -39,9 +39,12 @@ public class KinesisFileFlow extends FileFlow<KinesisRecord> {
     public static final Range<Long> VALID_WAIT_ON_EMPTY_PUBLISH_QUEUE_MILLIS_RANGE = Range.closed(
             TimeUnit.SECONDS.toMillis(1), TimeUnit.MINUTES.toMillis(15));
 
-    @Getter protected final String id;
-    @Getter protected final String destination;
-    @Getter protected final PartitionKeyOption partitionKeyOption;
+    @Getter
+    protected final String id;
+    @Getter
+    protected final String destination;
+    @Getter
+    protected final PartitionKeyOption partitionKeyOption;
 
     public KinesisFileFlow(AgentContext context, Configuration config) {
         super(context, config);
@@ -72,7 +75,7 @@ public class KinesisFileFlow extends FileFlow<KinesisRecord> {
         SourceFileTracker fileTracker = buildSourceFileTracker();
         AsyncPublisherService<KinesisRecord> publisher = getPublisher(checkpoints, sendingExecutor);
         return new FileTailer<KinesisRecord>(
-        		agentContext, this, fileTracker,
+                agentContext, this, fileTracker,
                 publisher, buildParser(), checkpoints);
     }
 
@@ -86,7 +89,7 @@ public class KinesisFileFlow extends FileFlow<KinesisRecord> {
             FileCheckpointStore checkpoints,
             ExecutorService sendingExecutor) {
         return new AsyncPublisherService<>(agentContext, this, checkpoints,
-                        buildSender(), sendingExecutor);
+                buildSender(), sendingExecutor);
     }
 
     @Override

@@ -1,28 +1,27 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.metrics;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.slf4j.Logger;
 
 import com.amazon.kinesis.streaming.agent.Logging;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.model.MetricDatum;
 import com.amazonaws.services.cloudwatch.model.PutMetricDataRequest;
+import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Default implementation for publishing metrics to CloudWatch.
@@ -54,10 +53,10 @@ public class DefaultCWMetricsPublisher implements ICWMetricsPublisher<CWMetricKe
             List<MetricDatum> metricData = new ArrayList<MetricDatum>();
             for (int i = startIndex; i < endIndex; i++) {
                 MetricDatum metric = dataToPublish.get(i).datum;
-                if(!metric.getMetricName().startsWith("."))
+                if (!metric.getMetricName().startsWith("."))
                     metricData.add(dataToPublish.get(i).datum);
             }
-            if(metricData.isEmpty())
+            if (metricData.isEmpty())
                 return;
 
             request.setMetricData(metricData);

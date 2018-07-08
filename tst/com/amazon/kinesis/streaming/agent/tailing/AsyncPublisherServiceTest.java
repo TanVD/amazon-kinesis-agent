@@ -3,31 +3,26 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
+import com.amazon.kinesis.streaming.agent.AgentContext;
+import com.amazon.kinesis.streaming.agent.tailing.*;
+import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpoint;
+import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
+import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpointStore;
+import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender;
+import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
+import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
+import com.google.common.base.Joiner;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.AsyncPublisherService;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
-import com.amazon.kinesis.streaming.agent.tailing.ISender;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
-import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpoint;
-import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
-import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpointStore;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
-import com.google.common.base.Joiner;
 
 
 public class AsyncPublisherServiceTest extends TailingTestBase {
@@ -43,9 +38,9 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
         flow = (FileFlow<FirehoseRecord>) context.flows().get(0);
     }
 
-    @DataProvider(name="senders")
+    @DataProvider(name = "senders")
     private Object[][] getSendersData() {
-        return new Object[][] {
+        return new Object[][]{
                 {new FileSender.PerfectFileSenderFactory<FirehoseRecord>()},
                 {new FileSender.FileSenderWithHighLatencyFactory<FirehoseRecord>()},
                 {new FileSender.FileSenderWithPartialFailuresFactory<FirehoseRecord>()},
@@ -64,16 +59,16 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
         return publisher;
     }
 
-    @Test(dataProvider="senders", invocationCount=TEST_REPS, skipFailedInvocations=true, timeOut=TEST_TIMEOUT)
+    @Test(dataProvider = "senders", invocationCount = TEST_REPS, skipFailedInvocations = true, timeOut = TEST_TIMEOUT)
     public void testPublishRecordsAndStop(FileSenderFactory<FirehoseRecord> senderFactory) throws Exception {
         final int recordCount = 3 * flow.getMaxBufferSizeRecords();
         Path outputFile = testFiles.createTempFile();
         AsyncPublisherService<FirehoseRecord> publisher = getAsyncPublisher(senderFactory.create(context, outputFile));
         List<FirehoseRecord> records = new ArrayList<>();
-        for(int i = 0; i < recordCount; ++i)
+        for (int i = 0; i < recordCount; ++i)
             records.add(getTestRecord(flow));
         publisher.startPublisher();
-        for(FirehoseRecord record : records) {
+        for (FirehoseRecord record : records) {
             publisher.publishRecord(record);
         }
         Assert.assertTrue(publisher.isRunning());
@@ -90,7 +85,7 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
         Assert.assertFalse(publisher.isRunning());
     }
 
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true, timeOut=TEST_TIMEOUT)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true, timeOut = TEST_TIMEOUT)
     public void testCheckpointUpdateOnSuccess() throws Exception {
         final int intermediateRecordCount = (int) (1.5 * flow.getMaxBufferSizeRecords());
         Path outputFile = testFiles.createTempFile();
@@ -104,7 +99,7 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
         Assert.assertNull(publisher.checkpointer().getStore().getCheckpointForPath(flow, inputFile.getPath()));
 
         // Publish few records and flush, then see the new checkpoint
-        for(int i = 0; i < intermediateRecordCount; ++i)
+        for (int i = 0; i < intermediateRecordCount; ++i)
             publisher.publishRecord(getTestRecord(flow));
         FirehoseRecord lastRecord = getTestRecord(flow);
         publisher.publishRecord(lastRecord);
@@ -128,7 +123,7 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
         publisher.stopPublisher();
     }
 
-    @Test(invocationCount=TEST_REPS, skipFailedInvocations=true, timeOut=TEST_TIMEOUT)
+    @Test(invocationCount = TEST_REPS, skipFailedInvocations = true, timeOut = TEST_TIMEOUT)
     public void testCheckpointUpdateOnSuccessMultipleFiles() throws Exception {
         final int intermediateRecordCount = (int) (1.5 * flow.getMaxBufferSizeRecords());
         Path outputFile = testFiles.createTempFile();
@@ -141,7 +136,7 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
         Assert.assertNull(publisher.checkpointer().getStore().getCheckpointForPath(flow, inputFile1.getPath()));
 
         // Publish few records from first file, then simulate rotation
-        for(int i = 0; i < intermediateRecordCount; ++i)
+        for (int i = 0; i < intermediateRecordCount; ++i)
             publisher.publishRecord(getTestRecord(flow));
         publisher.flush();
         publisher.waitForIdle();
@@ -150,7 +145,7 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
         initTestRecord(flow);
         TrackedFile inputFile2 = sourceFileForTestRecords;
         Assert.assertNull(publisher.checkpointer().getStore().getCheckpointForPath(flow, inputFile2.getPath()));
-        for(int i = 0; i < intermediateRecordCount; ++i)
+        for (int i = 0; i < intermediateRecordCount; ++i)
             publisher.publishRecord(getTestRecord(flow));
 
         // Now see the checkpoint update for the second file
@@ -170,16 +165,16 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
 
     private void logCheckpoints(FileCheckpointStore checkpoints) {
         logger.debug(">> Checkpoints in {}:", checkpoints);
-        for(Map<String, Object> cpdata : checkpoints.dumpCheckpoints())
+        for (Map<String, Object> cpdata : checkpoints.dumpCheckpoints())
             logger.debug(">>>> " + Joiner.on(",").withKeyValueSeparator("=").join(cpdata));
     }
 
-    @DataProvider(name="noCheckpointUpdateOnFailuresData")
+    @DataProvider(name = "noCheckpointUpdateOnFailuresData")
     public Object[][] testNoCheckpointUpdateOnFailuresData() {
-        return new Object[][] { { 1.0, 0.0 }, { 0.0, 1.0 } };
+        return new Object[][]{{1.0, 0.0}, {0.0, 1.0}};
     }
 
-    @Test(dataProvider="noCheckpointUpdateOnFailuresData", invocationCount=TEST_REPS, skipFailedInvocations=true, timeOut=TEST_TIMEOUT)
+    @Test(dataProvider = "noCheckpointUpdateOnFailuresData", invocationCount = TEST_REPS, skipFailedInvocations = true, timeOut = TEST_TIMEOUT)
     public void testNoCheckpointUpdateOnFailures(double partialFailureRate, double errorBeforeCommitRate) throws Exception {
         final int intermediateRecordCount = (int) (1.5 * flow.getMaxBufferSizeRecords());
         Path outputFile = testFiles.createTempFile();
@@ -193,7 +188,7 @@ public class AsyncPublisherServiceTest extends TailingTestBase {
         Assert.assertNull(publisher.checkpointer().getStore().getCheckpointForPath(flow, inputFile.getPath()));
 
         // Publish few records and flush
-        for(int i = 0; i < intermediateRecordCount; ++i)
+        for (int i = 0; i < intermediateRecordCount; ++i)
             publisher.publishRecord(getTestRecord(flow));
 
         publisher.flush();

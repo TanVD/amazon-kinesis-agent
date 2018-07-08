@@ -1,33 +1,18 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 
 package com.amazon.kinesis.streaming.agent;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.slf4j.Logger;
 
 import com.amazon.kinesis.streaming.agent.config.AgentConfiguration;
 import com.amazon.kinesis.streaming.agent.config.AgentOptions;
@@ -44,6 +29,20 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.MoreExecutors;
+import org.slf4j.Logger;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Main class for AWS Firehose Agent.
@@ -56,7 +55,7 @@ public class Agent extends AbstractIdleService implements IHeartbeatProvider {
         String configFile = opts.getConfigFile();
         AgentConfiguration config = tryReadConfigurationFile(Paths.get(opts.getConfigFile()));
         Path logFile = opts.getLogFile() != null ? Paths.get(opts.getLogFile()) : (config != null ? config.logFile() : null);
-        String logLevel = config != null ? config.logLevel() : (opts.getLogLevel() != null ? opts.getLogLevel() : null );
+        String logLevel = config != null ? config.logLevel() : (opts.getLogLevel() != null ? opts.getLogLevel() : null);
         int logMaxBackupFileIndex = (config != null ? config.logMaxBackupIndex() : -1);
         long logMaxFileSize = (config != null ? config.logMaxFileSize() : -1L);
         Logging.initialize(logFile, logLevel, logMaxBackupFileIndex, logMaxFileSize);
@@ -138,7 +137,7 @@ public class Agent extends AbstractIdleService implements IHeartbeatProvider {
             return null;
         }
     }
-    
+
     private static AgentConfiguration readConfigurationDirectory(AgentConfiguration agentConfiguration) {
         final String DEFAULT_CONFIG_DIRECTORY = "/etc/aws-kinesis/agent.d/";
         final Logger logger = Logging.getLogger(Agent.class);
@@ -172,10 +171,10 @@ public class Agent extends AbstractIdleService implements IHeartbeatProvider {
         logger.info("Found " + flows.size() + " configured flow(s)");
 
         // Append flows
-        HashMap<String, Object> newConfig = new HashMap<String,Object>(agentConfiguration.getConfigMap());
+        HashMap<String, Object> newConfig = new HashMap<String, Object>(agentConfiguration.getConfigMap());
         newConfig.put("flows", flows);
         return new AgentConfiguration(newConfig);
-    } 
+    }
 
     private final AgentContext agentContext;
     private final HeartbeatService heartbeat;
@@ -435,7 +434,7 @@ public class Agent extends AbstractIdleService implements IHeartbeatProvider {
 
     /**
      * {@inheritDoc}
-     *
+     * <p>
      * No need to create a separate thread for startup/shutdow. The agent
      * uses the main thread.
      */

@@ -3,19 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import lombok.Getter;
-import lombok.ToString;
-
-import org.slf4j.Logger;
-import org.testng.Assert;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.SourceFileTracker;
@@ -25,6 +12,13 @@ import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpoint;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import lombok.Getter;
+import lombok.ToString;
+import org.slf4j.Logger;
+import org.testng.Assert;
+
+import java.io.IOException;
+import java.util.*;
 
 public class TestableSourceFileTracker extends SourceFileTracker {
     private static final Logger LOGGER = TestUtils.getLogger(TestableSourceFileTracker.class);
@@ -38,7 +32,7 @@ public class TestableSourceFileTracker extends SourceFileTracker {
     }
 
     public void rememberCurrentOpenFile() throws IOException {
-        if(getCurrentOpenFile() != null)
+        if (getCurrentOpenFile() != null)
             rememberedFile = new RememberedTrackedFile(getCurrentOpenFile(), getCurrentOpenFileIndex());
     }
 
@@ -47,7 +41,7 @@ public class TestableSourceFileTracker extends SourceFileTracker {
     }
 
     public void assertStillTrackingRememberedFileAfterRotation() throws IOException {
-        if(!(rotator instanceof CopyFileRotator)) {
+        if (!(rotator instanceof CopyFileRotator)) {
             Assert.assertTrue(newerFilesPending());
         }
         assertStillTrackingRememberedFile();
@@ -83,7 +77,7 @@ public class TestableSourceFileTracker extends SourceFileTracker {
     public void assertTailingWasReset() throws IOException {
         assertEvents("resetTailing");
         Assert.assertFalse(newerFilesPending());
-        if(getCurrentOpenFile() != null) {
+        if (getCurrentOpenFile() != null) {
             Assert.assertEquals(getCurrentOpenFileIndex(), 0);
             Assert.assertTrue(getCurrentOpenFile().isOpen());
             Assert.assertEquals(getCurrentOpenFile().getCurrentOffset(), 0);
@@ -95,7 +89,7 @@ public class TestableSourceFileTracker extends SourceFileTracker {
     public void assertCurrentFileWasNotFound() {
         Assert.assertTrue(
                 findEvent("currentFileNotFound", 0) != -1
-                || findEvent("allFilesDisappeared", 0) != -1);
+                        || findEvent("allFilesDisappeared", 0) != -1);
     }
 
     public void assertTailingWasStopped() {
@@ -107,8 +101,8 @@ public class TestableSourceFileTracker extends SourceFileTracker {
 
     public int findEventByType(String type) {
         int i = 0;
-        for(RefreshEvent event : refreshEvents) {
-            if(event.getType().equals(type))
+        for (RefreshEvent event : refreshEvents) {
+            if (event.getType().equals(type))
                 return i;
             ++i;
         }
@@ -118,7 +112,7 @@ public class TestableSourceFileTracker extends SourceFileTracker {
     public void assertEvents(String... types) {
         int i = 0;
         int eventIndex = 0;
-        while(i < types.length && eventIndex < refreshEvents.size()) {
+        while (i < types.length && eventIndex < refreshEvents.size()) {
             String type = types[i];
             eventIndex = findEvent(type, eventIndex);
             if (eventIndex != -1) {
@@ -132,8 +126,8 @@ public class TestableSourceFileTracker extends SourceFileTracker {
 
     public int findEvent(String type, int start) {
         int j = start;
-        while(j < refreshEvents.size()) {
-            if(refreshEvents.get(j).getType().equals(type)) {
+        while (j < refreshEvents.size()) {
+            if (refreshEvents.get(j).getType().equals(type)) {
                 return j;
             }
             ++j;
@@ -236,8 +230,8 @@ public class TestableSourceFileTracker extends SourceFileTracker {
         Preconditions.checkArgument(kvpairs.length % 2 == 0);
         RefreshEvent e = new RefreshEvent(type);
         e.put("currentFile", getCurrentOpenFile());
-        for(int i = 0; i+1 < kvpairs.length; i+=2) {
-            e.put(kvpairs[i].toString(), kvpairs[i+1]);
+        for (int i = 0; i + 1 < kvpairs.length; i += 2) {
+            e.put(kvpairs[i].toString(), kvpairs[i + 1]);
         }
         LOGGER.trace("Event: " + e);
         refreshEvents.add(e);
@@ -249,12 +243,14 @@ public class TestableSourceFileTracker extends SourceFileTracker {
      */
     @ToString
     public static class RefreshEvent {
-        @Getter private final String type;
+        @Getter
+        private final String type;
         private final Map<String, Object> data;
-        @Getter private final long timestamp = System.currentTimeMillis();
+        @Getter
+        private final long timestamp = System.currentTimeMillis();
 
         public RefreshEvent(String type) {
-            this(type, Collections.<String, Object> emptyMap());
+            this(type, Collections.<String, Object>emptyMap());
         }
 
         public RefreshEvent(String type, Map<String, Object> data) {

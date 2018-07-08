@@ -3,24 +3,22 @@
  */
 package com.amazon.kinesis.streaming.agent;
 
-import static org.testng.Assert.assertEquals;
-
-import java.io.InputStream;
-import java.nio.file.Paths;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
+import com.amazon.kinesis.streaming.agent.Logging;
+import com.amazon.kinesis.streaming.agent.Logging.Log4JNamespaceContext;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.amazon.kinesis.streaming.agent.Logging;
-import com.amazon.kinesis.streaming.agent.Logging.Log4JNamespaceContext;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.InputStream;
+import java.nio.file.Paths;
+
+import static org.testng.Assert.assertEquals;
 
 public class LoggingTest extends TestBase {
 

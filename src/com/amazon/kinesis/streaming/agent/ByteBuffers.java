@@ -1,23 +1,19 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent;
 
-import java.io.ByteArrayInputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.IllegalBlockingModeException;
@@ -42,21 +38,21 @@ public final class ByteBuffers {
         if (input == null)
             return null;
         StringBuffer output = new StringBuffer();
-        for(int i = 0; i < input.length(); ++i) {
+        for (int i = 0; i < input.length(); ++i) {
             char c = input.charAt(i);
-            switch(c) {
-            case '\t':
-                output.append("\\t");
-                break;
-            case '\n':
-                output.append("\\n");
-                output.append(c);
-                break;
-            case '\r':
-                output.append("\\r");
-                break;
-            default:
-                output.append(c);
+            switch (c) {
+                case '\t':
+                    output.append("\\t");
+                    break;
+                case '\n':
+                    output.append("\\n");
+                    output.append(c);
+                    break;
+                case '\r':
+                    output.append("\\r");
+                    break;
+                default:
+                    output.append(c);
             }
         }
         return output.toString();
@@ -89,8 +85,7 @@ public final class ByteBuffers {
      * Copies all remaining bytes from the byte buffer to the output stream.
      * Does not modify the buffer or flush or close the output stream.
      *
-     * @throws IOException
-     *             if an I/O error occurs when writing to the stream
+     * @throws IOException if an I/O error occurs when writing to the stream
      */
     public static void copy(ByteBuffer buffer, OutputStream out) throws IOException {
         if (buffer.hasArray()) {
@@ -109,6 +104,7 @@ public final class ByteBuffers {
 
     /**
      * Return a ByteBuffer representation of the String per given charset
+     *
      * @param str
      * @param charset
      */
@@ -132,6 +128,7 @@ public final class ByteBuffers {
     /**
      * Return the result of decoding the remaining contents of the provided
      * ByteBuffer. The buffer's position will not be modified.
+     *
      * @param buffer
      * @param charset
      */
@@ -143,12 +140,12 @@ public final class ByteBuffers {
      * Returns a String obtained by decoding {@code size} bytes or
      * remaining bytes in the ByteBuffer, whichever is lower, starting from the
      * position in the ByteBuffer. The buffer's position will not be modified.
+     *
      * @param buffer
-     * @param size
-     *            The number of bytes starting from the position of the buffer
-     *            to convert to a String. If this is more than the remaining
-     *            bytes in the buffer, only the remaining bytes will be
-     *            converted to a String.
+     * @param size    The number of bytes starting from the position of the buffer
+     *                to convert to a String. If this is more than the remaining
+     *                bytes in the buffer, only the remaining bytes will be
+     *                converted to a String.
      * @param charset
      */
     public static String toString(ByteBuffer buffer, int size, Charset charset) {
@@ -169,19 +166,14 @@ public final class ByteBuffers {
      * starting at the given file position. This method does not modify the
      * channel position or close the channel.
      *
-     * @param channel
-     *            The FileChannel to read from. See
-     *            {@link FileChannel#read(ByteBuffer, long)}.
-     * @param fileOffset
-     *            The file position at which reading is to begin
-     * @param bytesToRead
-     *            The number of bytes to read past the offset
+     * @param channel     The FileChannel to read from. See
+     *                    {@link FileChannel#read(ByteBuffer, long)}.
+     * @param fileOffset  The file position at which reading is to begin
+     * @param bytesToRead The number of bytes to read past the offset
      * @return A newly allocated ByteBuffer with the position set to zero
-     * @throws EOFException
-     *             if EOF is reached before reading the requested number of
-     *             bytes
-     * @throws IOException
-     *             if reading from the channel fails for any reason
+     * @throws EOFException if EOF is reached before reading the requested number of
+     *                      bytes
+     * @throws IOException  if reading from the channel fails for any reason
      */
     public static ByteBuffer readFully(FileChannel channel, long fileOffset, int bytesToRead)
             throws IOException {
@@ -204,22 +196,18 @@ public final class ByteBuffers {
      * {@link ReadableByteChannel#read(ByteBuffer)}, except it guarantees that
      * the buffer will be filled or an exception thrown.
      *
-     * @param channel
-     *            The channel to read from. The channel must not be in
-     *            non-blocking mode, or else
-     *            {@link IllegalBlockingModeException} may be thrown.
-     * @param dst
-     *            The buffer to fill with bytes from the channel. The position
-     *            of the buffer will be left where reading finished; generally,
-     *            after reading finishes, you will call
-     *            {@link ByteBuffer#flip()} to read data out of it.
+     * @param channel The channel to read from. The channel must not be in
+     *                non-blocking mode, or else
+     *                {@link IllegalBlockingModeException} may be thrown.
+     * @param dst     The buffer to fill with bytes from the channel. The position
+     *                of the buffer will be left where reading finished; generally,
+     *                after reading finishes, you will call
+     *                {@link ByteBuffer#flip()} to read data out of it.
      * @return The number of bytes read into the buffer--on a successful return,
-     *         this will always be the number of {@code remaining} bytes on the
-     *         {@code dst} buffer before this method was called.
-     * @throws EOFException
-     *             if EOF is reached before filling the buffer
-     * @throws IOException
-     *             if reading from the channel fails for any reason
+     * this will always be the number of {@code remaining} bytes on the
+     * {@code dst} buffer before this method was called.
+     * @throws EOFException if EOF is reached before filling the buffer
+     * @throws IOException  if reading from the channel fails for any reason
      */
     public static int readFully(ReadableByteChannel channel, ByteBuffer dst)
             throws IOException {
@@ -247,7 +235,7 @@ public final class ByteBuffers {
      * @param offset
      * @param length
      * @return A view of the original buffer starting at {@code offset} (position 0)
-     *         and with a limit == to {@code length}.
+     * and with a limit == to {@code length}.
      */
     public static ByteBuffer getPartialView(ByteBuffer original, int offset, int length) {
         int oldPosition = original.position();
@@ -267,7 +255,7 @@ public final class ByteBuffers {
      * next newline, or else the end of the buffer if there is no final newline.
      *
      * @return {@code position} of the buffer at the starting index of the next newline;
-     *         {@code -1} if the end of the buffer was reached.
+     * {@code -1} if the end of the buffer was reached.
      */
     public static int advanceBufferToNextLine(ByteBuffer buffer) {
         while (buffer.hasRemaining()) {

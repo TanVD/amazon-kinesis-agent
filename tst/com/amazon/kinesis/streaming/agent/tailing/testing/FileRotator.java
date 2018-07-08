@@ -3,6 +3,16 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.testing;
 
+import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import org.slf4j.Logger;
+
+import javax.annotation.concurrent.NotThreadSafe;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -15,43 +25,44 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import javax.annotation.concurrent.NotThreadSafe;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
-import org.slf4j.Logger;
-
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
-
 /**
  * Base class for all file-rotation simulators.
  * Subclasses need to implement the specific rotation logic (e.g rename/recreate,
  * copy/truncate, etc...).
  */
 @NotThreadSafe
-@ToString(exclude = { "logger", "deletedDir", "deletedFiles" })
+@ToString(exclude = {"logger", "deletedDir", "deletedFiles"})
 public abstract class FileRotator {
     public static final int DEFAULT_MIN_NEW_FILE_SIZE_BYTES = 50 * 1024;
     public static final int DEFAULT_MIN_ROTATED_FILE_SIZE_BYTES = 10 * DEFAULT_MIN_NEW_FILE_SIZE_BYTES;
     public static final int DEFAULT_MAX_FILES_TO_KEEP_ON_DISK = 5;
 
     protected final Logger logger;
-    @Getter protected final Path dir;
-    @Getter protected final Path deletedDir;
-    @Getter protected final String prefix;
-    @Getter @Setter protected int maxFilesToKeepOnDisk;
-    @Getter protected final List<Path> activeFiles;
-    @Getter protected final List<Path> deletedFiles;
-    @Getter protected final List<AtomicInteger> recordsWritten;
-    @Getter protected final RecordGenerator recordGenerator;
-    @Getter @Setter protected long minNewFileSize;
-    @Getter @Setter protected long minRotatedFileSize;
-    @Getter private long lastRotationTime = 0;
+    @Getter
+    protected final Path dir;
+    @Getter
+    protected final Path deletedDir;
+    @Getter
+    protected final String prefix;
+    @Getter
+    @Setter
+    protected int maxFilesToKeepOnDisk;
+    @Getter
+    protected final List<Path> activeFiles;
+    @Getter
+    protected final List<Path> deletedFiles;
+    @Getter
+    protected final List<AtomicInteger> recordsWritten;
+    @Getter
+    protected final RecordGenerator recordGenerator;
+    @Getter
+    @Setter
+    protected long minNewFileSize;
+    @Getter
+    @Setter
+    protected long minRotatedFileSize;
+    @Getter
+    private long lastRotationTime = 0;
     private AtomicLong totalRecordsWritten = new AtomicLong();
     private AtomicLong totalBytesWritten = new AtomicLong();
 
@@ -85,23 +96,20 @@ public abstract class FileRotator {
     }
 
     /**
-     * @param index
-     *            The index of the file to return, where 0 points to the most
-     *            recent file, and {@link #getMaxInputFileIndex()} points to the oldest file.
+     * @param index The index of the file to return, where 0 points to the most
+     *              recent file, and {@link #getMaxInputFileIndex()} points to the oldest file.
      * @return The path of the file at the given inde.
-     * @throws IndexOutOfBoundsException
-     *             If the index is less than 0 or more than {@link #getMaxInputFileIndex()}.
+     * @throws IndexOutOfBoundsException If the index is less than 0 or more than {@link #getMaxInputFileIndex()}.
      */
     public Path getFile(int index) {
         return activeFiles.get(index);
     }
 
     /**
-     *
      * @param index
      * @return The number of records written via this rotator to the file
-     *         at the given index. This only captures data writted by this
-     *         rotator by calling the {@link #appendDataToLatestFile(long)}.
+     * at the given index. This only captures data writted by this
+     * rotator by calling the {@link #appendDataToLatestFile(long)}.
      */
     public int getRecordsWrittenToFile(int index) {
         return recordsWritten.get(index).intValue();
@@ -125,8 +133,7 @@ public abstract class FileRotator {
      * Creates a number of files, one at a time, simulating rotation. All files
      * will contain data, except the last one which is governed by <code>writeData</code> parameters.
      *
-     * @param rotationCount
-     *            Number of files to create.
+     * @param rotationCount Number of files to create.
      * @return The path of the last file created.
      */
     public Path rotate(int rotationCount) {
@@ -138,8 +145,8 @@ public abstract class FileRotator {
 
     /**
      * @return The new path of the file that used to be the latest file (now <code>getFile(1)</code>), or
-     *         <code>null</code> if no files
-     *         existed before this call.
+     * <code>null</code> if no files
+     * existed before this call.
      */
     public Path rotate() {
         try {
@@ -150,8 +157,8 @@ public abstract class FileRotator {
             recordsWritten.add(0, new AtomicInteger(0));
             lastRotationTime = System.currentTimeMillis();
             writeDataToNewFileAfterRotation();
-            while(activeFiles.size() > maxFilesToKeepOnDisk) {
-                Path toDelete = activeFiles.remove(activeFiles.size()-1);
+            while (activeFiles.size() > maxFilesToKeepOnDisk) {
+                Path toDelete = activeFiles.remove(activeFiles.size() - 1);
                 deletedFiles.add(TestUtils.moveFileToTrash(toDelete, deletedDir));
                 logger.trace("Deleted {} since maxFilesToKeep ({}) exceeded", toDelete, maxFilesToKeepOnDisk);
             }
@@ -194,8 +201,7 @@ public abstract class FileRotator {
     /**
      * Rotates a file by renaming it.
      *
-     * @param index
-     *            Index of the file to rotate.
+     * @param index Index of the file to rotate.
      * @throws IOException
      */
     protected Path rotateFileName(int index) throws IOException {
@@ -213,9 +219,8 @@ public abstract class FileRotator {
     }
 
     /**
-     * @param maxBytes
-     *            Maximum number of bytes to be written. The actual number of
-     *            bytes written with be higher, but close to this minimum.
+     * @param maxBytes Maximum number of bytes to be written. The actual number of
+     *                 bytes written with be higher, but close to this minimum.
      * @return Number of records written to file.
      */
     public int appendDataToLatestFile(long maxBytes) {
@@ -242,9 +247,7 @@ public abstract class FileRotator {
     }
 
     /**
-     * @param recordCount
-     *            Number of records to add to the latest file.
-     *
+     * @param recordCount Number of records to add to the latest file.
      * @return Number of records written to file.
      */
     public int appendRecordsToLatestFile(int recordCount) {
@@ -320,7 +323,7 @@ public abstract class FileRotator {
 
     /**
      * @return The glob expression that can be used to track the files generated
-     *         by this rotator.
+     * by this rotator.
      */
     public String getInputFileGlob() {
         return String.format("%s/%s*", dir.toString(), prefix);
@@ -343,7 +346,6 @@ public abstract class FileRotator {
     }
 
     /**
-     *
      * @return The path of the file that's to be created.
      */
     @VisibleForTesting
@@ -371,8 +373,8 @@ public abstract class FileRotator {
 
     /**
      * @return <code>true</code> if after calling {@link #rotate()} the
-     *         file that was just rotated keeps the same <code>FileId</code> as
-     *         before the rotation, otherwise <code>false</code>.
+     * file that was just rotated keeps the same <code>FileId</code> as
+     * before the rotation, otherwise <code>false</code>.
      */
     @VisibleForTesting
     boolean rotatedFileKeepsSameId() {
@@ -381,8 +383,8 @@ public abstract class FileRotator {
 
     /**
      * @return <code>true</code> if after calling {@link #rotate()} the
-     *         file that was just rotated keeps the same path as before the
-     *         rotation, otherwise <code>false</code>.
+     * file that was just rotated keeps the same path as before the
+     * rotation, otherwise <code>false</code>.
      */
     @VisibleForTesting
     boolean rotatedFileKeepsSamePath() {
@@ -391,14 +393,14 @@ public abstract class FileRotator {
 
     /**
      * @return <code>true</code> if after calling {@link #rotate()} the
-     *         latest file (if it exists) will have the same path, otherwise <code>false</code>.
+     * latest file (if it exists) will have the same path, otherwise <code>false</code>.
      */
     @VisibleForTesting
     abstract boolean latestFileKeepsSamePath();
 
     /**
      * @return <code>true</code> if after calling {@link #rotate()} the
-     *         latest file (if it exists) will have the same ID, otherwise <code>false</code>.
+     * latest file (if it exists) will have the same ID, otherwise <code>false</code>.
      */
     @VisibleForTesting
     abstract boolean latestFileKeepsSameId();

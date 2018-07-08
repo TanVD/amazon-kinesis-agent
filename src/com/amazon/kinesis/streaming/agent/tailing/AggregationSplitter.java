@@ -52,7 +52,7 @@ public class AggregationSplitter implements ISplitter {
      *
      * @param buffer the buffer to read the next aggregated record from
      * @return {@code position} of the buffer at the index following the end of the current aggregated record; {@code -1} if the end of the
-     *         buffer was reached
+     * buffer was reached
      */
     private int advanceBufferToNextAggregatedRecord(final ByteBuffer buffer) {
         final int initialPosition = buffer.position();

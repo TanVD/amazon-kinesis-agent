@@ -3,12 +3,21 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
+import com.amazon.kinesis.streaming.agent.AgentContext;
+import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
+import com.amazon.kinesis.streaming.agent.tailing.FileFlow.InitialPosition;
+import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
+import com.amazon.kinesis.streaming.agent.tailing.IRecord;
+import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
+import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpoint;
+import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
+import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpointStore;
+import com.amazon.kinesis.streaming.agent.tailing.testing.*;
+import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
+import com.amazon.kinesis.streaming.agent.testing.TestUtils;
+import com.google.common.base.Preconditions;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,32 +26,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
-import com.amazon.kinesis.streaming.agent.tailing.IRecord;
-import com.amazon.kinesis.streaming.agent.tailing.TrackedFile;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow.InitialPosition;
-import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpoint;
-import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
-import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpointStore;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileRotator;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender;
-import com.amazon.kinesis.streaming.agent.tailing.testing.RememberedTrackedFile;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TestableFileTailer;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
-import com.amazon.kinesis.streaming.agent.testing.TestUtils;
-import com.google.common.base.Preconditions;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.*;
 
 public class FileTailerTest extends TailingTestBase {
     private static final int TEST_TIMEOUT = 60_000;
     private static final int TEST_REPS = 1;
 
-    @Test(dataProvider="rotatorsSendersAndTailers", timeOut=TEST_TIMEOUT, skipFailedInvocations=true, invocationCount=TEST_REPS)
+    @Test(dataProvider = "rotatorsSendersAndTailers", timeOut = TEST_TIMEOUT, skipFailedInvocations = true, invocationCount = TEST_REPS)
     public void testStartWithCheckpoint(
             FileRotatorFactory rotatorFactory,
             TestableFileTailerFactory<FirehoseRecord> tailerFactory,
@@ -81,7 +73,7 @@ public class FileTailerTest extends TailingTestBase {
         }.call();
     }
 
-    @Test(dataProvider="rotatorsSendersAndTailers", timeOut=TEST_TIMEOUT, skipFailedInvocations=true, invocationCount=TEST_REPS)
+    @Test(dataProvider = "rotatorsSendersAndTailers", timeOut = TEST_TIMEOUT, skipFailedInvocations = true, invocationCount = TEST_REPS)
     public void testStartWithCheckpointAndRotation(
             FileRotatorFactory rotatorFactory,
             TestableFileTailerFactory<FirehoseRecord> tailerFactory,
@@ -124,7 +116,7 @@ public class FileTailerTest extends TailingTestBase {
         }.call();
     }
 
-    @Test(dataProvider="rotatorsSendersAndTailers", timeOut=TEST_TIMEOUT, skipFailedInvocations=true, invocationCount=TEST_REPS)
+    @Test(dataProvider = "rotatorsSendersAndTailers", timeOut = TEST_TIMEOUT, skipFailedInvocations = true, invocationCount = TEST_REPS)
     public void testStartWithCheckpointThatDoesntMatchAndNoExistingFile(
             FileRotatorFactory rotatorFactory,
             TestableFileTailerFactory<FirehoseRecord> tailerFactory,
@@ -162,7 +154,7 @@ public class FileTailerTest extends TailingTestBase {
         }.call();
     }
 
-    @Test(dataProvider="rotatorsSendersTailersInitialPosition", timeOut=TEST_TIMEOUT, skipFailedInvocations=true, invocationCount=TEST_REPS)
+    @Test(dataProvider = "rotatorsSendersTailersInitialPosition", timeOut = TEST_TIMEOUT, skipFailedInvocations = true, invocationCount = TEST_REPS)
     public void testStartWithCheckpointThatDoesntMatch(
             FileRotatorFactory rotatorFactory,
             TestableFileTailerFactory<FirehoseRecord> tailerFactory,
@@ -196,7 +188,7 @@ public class FileTailerTest extends TailingTestBase {
         }.call();
     }
 
-    @Test(dataProvider="rotatorsSendersTailersInitialPosition", timeOut=TEST_TIMEOUT, skipFailedInvocations=true, invocationCount=TEST_REPS)
+    @Test(dataProvider = "rotatorsSendersTailersInitialPosition", timeOut = TEST_TIMEOUT, skipFailedInvocations = true, invocationCount = TEST_REPS)
     public void testStartWithPreexistingFileNoRotations(
             FileRotatorFactory rotatorFactory,
             TestableFileTailerFactory<FirehoseRecord> tailerFactory,
@@ -213,7 +205,7 @@ public class FileTailerTest extends TailingTestBase {
         }.call();
     }
 
-    @Test(dataProvider="rotatorsSendersAndTailers", timeOut=TEST_TIMEOUT, skipFailedInvocations=true, invocationCount=TEST_REPS)
+    @Test(dataProvider = "rotatorsSendersAndTailers", timeOut = TEST_TIMEOUT, skipFailedInvocations = true, invocationCount = TEST_REPS)
     public void testStartWithNonExistingFile(
             FileRotatorFactory rotatorFactory,
             TestableFileTailerFactory<FirehoseRecord> tailerFactory,
@@ -235,7 +227,7 @@ public class FileTailerTest extends TailingTestBase {
         }.call();
     }
 
-    @Test(dataProvider="rotatorsSendersTailersInitialPosition", timeOut=TEST_TIMEOUT, skipFailedInvocations=true, invocationCount=TEST_REPS)
+    @Test(dataProvider = "rotatorsSendersTailersInitialPosition", timeOut = TEST_TIMEOUT, skipFailedInvocations = true, invocationCount = TEST_REPS)
     public void testInputFilesAppearingAfterStart(
             FileRotatorFactory rotatorFactory,
             TestableFileTailerFactory<FirehoseRecord> tailerFactory,
@@ -258,7 +250,7 @@ public class FileTailerTest extends TailingTestBase {
     }
 
 
-    @Test(dataProvider="rotatorsSendersTailersInitialPosition", timeOut=TEST_TIMEOUT, skipFailedInvocations=true, invocationCount=TEST_REPS)
+    @Test(dataProvider = "rotatorsSendersTailersInitialPosition", timeOut = TEST_TIMEOUT, skipFailedInvocations = true, invocationCount = TEST_REPS)
     public void testStartWithPreexistingFileAndRotation(
             FileRotatorFactory rotatorFactory,
             TestableFileTailerFactory<FirehoseRecord> tailerFactory,
@@ -283,7 +275,7 @@ public class FileTailerTest extends TailingTestBase {
 
     @DataProvider(name = "rotatorsSendersTailersInitialPosition")
     public Object[][] getrotatorsSendersTailersInitialPositionData() throws IOException {
-        Object[][] initialPositions = new Object[][] {
+        Object[][] initialPositions = new Object[][]{
                 {InitialPosition.START_OF_FILE},
                 {InitialPosition.END_OF_FILE},
         };
@@ -297,7 +289,7 @@ public class FileTailerTest extends TailingTestBase {
         //       any particular combination that you want to analyze further.
 
         final int fileSize = 2 * 1024 * 1024;
-        Object[][] rotatorTailers = new Object[][] {
+        Object[][] rotatorTailers = new Object[][]{
                 {new TruncateFileRotatorFactory(fileSize), new AsyncFileTailerFactory()},
                 //{new RenameFileRotatorFactory(fileSize), new AsyncFileTailerFactory()},
                 //{new CreateFileRotatorFactory(fileSize), new AsyncFileTailerFactory()},
@@ -311,7 +303,7 @@ public class FileTailerTest extends TailingTestBase {
 
     @DataProvider(name = "senders")
     private Object[][] getSendersData() {
-        Object[][] senders = new Object[][] {
+        Object[][] senders = new Object[][]{
                 //{new FileSender.PerfectFileSenderFactory<FirehoseRecord>()},
                 //{new FileSender.FileSenderWithHighLatencyFactory<FirehoseRecord>()},
                 //{new FileSender.FileSenderWithPartialFailuresFactory<FirehoseRecord>()},
@@ -326,7 +318,7 @@ public class FileTailerTest extends TailingTestBase {
     }
 
     public abstract class TailerTestRunner implements Callable<Void> {
-        protected static final int BUNCH_OF_BYTES = 10*1014;
+        protected static final int BUNCH_OF_BYTES = 10 * 1014;
         final FileRotatorFactory rotatorFactory;
         final TestableFileTailerFactory<FirehoseRecord> tailerFactory;
         final FileRotator rotator;
@@ -379,7 +371,7 @@ public class FileTailerTest extends TailingTestBase {
 
         protected Map<String, Object> getAgentConfig(Path checkpointsFile) {
             Map<String, Object> agentConfig = new HashMap<>();
-            if(checkpointsFile != null)
+            if (checkpointsFile != null)
                 agentConfig.put("checkpointFile", checkpointsFile);
             return agentConfig;
         }
@@ -421,7 +413,7 @@ public class FileTailerTest extends TailingTestBase {
 
         protected void end() throws IOException {
             stopTailer();
-            if(senderFactory.producesDuplicates()) {
+            if (senderFactory.producesDuplicates()) {
                 // TODO: support duplicate records when testing
                 throw new UnsupportedOperationException("Testing for duplicate records not implemented yet.");
             }
@@ -437,7 +429,7 @@ public class FileTailerTest extends TailingTestBase {
         }
 
         protected void validateOutput(Path[] inputFiles) throws IOException {
-            if(initialPosition == InitialPosition.END_OF_FILE)
+            if (initialPosition == InitialPosition.END_OF_FILE)
                 assertOutputFileRecordsMatchInputFiles(outputFile, inputRecordsBeforeStart, inputFiles);
             else
                 assertOutputFileRecordsMatchInputFiles(outputFile, 0, inputFiles);
@@ -445,7 +437,7 @@ public class FileTailerTest extends TailingTestBase {
 
         protected void validateInputNotEmpty(Path[] inputFiles) throws IOException {
             // SANITYCHECK: Make sure we didn't shoot blanks...
-            for(Path f : inputFiles)
+            for (Path f : inputFiles)
                 assertTrue(Files.size(f) > 0);
             assertTrue(Files.size(outputFile) > 0);
         }
@@ -457,10 +449,10 @@ public class FileTailerTest extends TailingTestBase {
 
         @Override
         public Void call() throws Exception {
-          start();
-          doRun();
-          end();
-          return null;
+            start();
+            doRun();
+            end();
+            return null;
         }
 
         protected abstract void doRun() throws Exception;

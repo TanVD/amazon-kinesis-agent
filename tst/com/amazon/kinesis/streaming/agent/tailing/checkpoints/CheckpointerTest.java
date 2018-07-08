@@ -3,15 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.checkpoints;
 
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-
-import java.io.IOException;
-
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
@@ -20,6 +11,12 @@ import com.amazon.kinesis.streaming.agent.tailing.checkpoints.Checkpointer;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpointStore;
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+
+import static org.testng.Assert.*;
 
 public class CheckpointerTest extends TailingTestBase {
     private AgentContext context;

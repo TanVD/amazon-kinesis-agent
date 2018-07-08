@@ -3,20 +3,17 @@
  */
 package com.amazon.kinesis.streaming.agent;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import com.amazon.kinesis.streaming.agent.ByteBufferInputStream;
+import com.amazon.kinesis.streaming.agent.ByteBuffers;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.ByteBufferInputStream;
-import com.amazon.kinesis.streaming.agent.ByteBuffers;
+import static org.testng.Assert.*;
 
 public class ByteBufferInputStreamTest {
     ByteBuffer buffer;

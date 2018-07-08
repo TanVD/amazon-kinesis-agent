@@ -3,25 +3,23 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
+import com.amazon.kinesis.streaming.agent.Agent;
+import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
+import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender;
+import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
+import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
+import com.amazon.kinesis.streaming.agent.tailing.testing.TestAgentContext;
+import lombok.Cleanup;
+import org.testng.annotations.Test;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
-import lombok.Cleanup;
-
-import org.testng.annotations.Test;
-
-import com.amazon.kinesis.streaming.agent.Agent;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TestAgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
-
 public class AgentEnduranceTest extends TailingTestBase {
 
-    @Test(enabled=false, groups={"endurance"})
-    public void testAgent() throws IOException, InterruptedException  {
+    @Test(enabled = false, groups = {"endurance"})
+    public void testAgent() throws IOException, InterruptedException {
         final int targetFileSize = 2 * 1024 * 1024;
         FileRotatorFactory rotatorFactory = new TruncateFileRotatorFactory(targetFileSize);
         FileSenderFactory<FirehoseRecord> fileSenderFactory = new FileSender.FileSenderWithPartialFailuresAndErrorsBeforeCommitFactory<FirehoseRecord>();
@@ -35,7 +33,7 @@ public class AgentEnduranceTest extends TailingTestBase {
         agent.startAsync();
         agent.awaitRunning();
 
-        while(agent.isRunning()) {
+        while (agent.isRunning()) {
             Thread.sleep(2_000);
         }
     }

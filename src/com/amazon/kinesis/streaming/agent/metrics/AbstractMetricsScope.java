@@ -1,25 +1,25 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.metrics;
 
-import java.util.Set;
-
-import javax.annotation.concurrent.NotThreadSafe;
-
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
 import com.google.common.base.Preconditions;
+
+import javax.annotation.concurrent.NotThreadSafe;
+import java.util.Set;
+
 /**
  * An base implementation of an {@link IMetricsScope} that accumulates data
  * from multiple calls to addData with the same name parameter.
@@ -33,6 +33,7 @@ public abstract class AbstractMetricsScope implements IMetricsScope {
      * Adds data points to the scope {@link IMetricsScope}.
      * Multiple calls to this method with the same name will have their data
      * accumulated.
+     *
      * @see IMetricsScope#addData(String, double, StandardUnit)
      */
     @Override
@@ -40,7 +41,9 @@ public abstract class AbstractMetricsScope implements IMetricsScope {
         Preconditions.checkState(!closed, "Scope is already closed.");
         realAddData(name, value, unit);
     }
-    protected void realAddData(String name, double value, StandardUnit unit) { }
+
+    protected void realAddData(String name, double value, StandardUnit unit) {
+    }
 
     @Override
     public void addCount(String name, long amount) {
@@ -57,7 +60,9 @@ public abstract class AbstractMetricsScope implements IMetricsScope {
         Preconditions.checkState(!closed, "Scope is already closed.");
         realAddDimension(name, value);
     }
-    protected void realAddDimension(String name, String value) { }
+
+    protected void realAddDimension(String name, String value) {
+    }
 
     @Override
     public final void commit() {
@@ -79,8 +84,11 @@ public abstract class AbstractMetricsScope implements IMetricsScope {
         }
     }
 
-    protected void realCancel() { }
-    protected void realCommit() { }
+    protected void realCancel() {
+    }
+
+    protected void realCommit() {
+    }
 
     @Override
     public boolean closed() {
@@ -95,5 +103,6 @@ public abstract class AbstractMetricsScope implements IMetricsScope {
         Preconditions.checkState(!closed, "Scope is already closed.");
         return realGetDimensions();
     }
+
     protected abstract Set<Dimension> realGetDimensions();
 }

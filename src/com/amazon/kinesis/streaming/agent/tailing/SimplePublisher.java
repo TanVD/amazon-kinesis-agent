@@ -1,25 +1,17 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
-
-import java.nio.channels.ClosedByInterruptException;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-
-import lombok.Getter;
-
-import org.slf4j.Logger;
 
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.IHeartbeatProvider;
@@ -27,6 +19,12 @@ import com.amazon.kinesis.streaming.agent.Logging;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.Checkpointer;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
 import com.google.common.annotations.VisibleForTesting;
+import lombok.Getter;
+import org.slf4j.Logger;
+
+import java.nio.channels.ClosedByInterruptException;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Core functionality of a publisher that buffers records into an
@@ -44,9 +42,12 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
     protected final ISender<R> sender;
     protected volatile boolean isOpen = true;
 
-    @Getter final AgentContext agentContext;
-    @Getter final FileFlow<R> flow;
-    @Getter final PublishingQueue<R> queue;
+    @Getter
+    final AgentContext agentContext;
+    @Getter
+    final FileFlow<R> flow;
+    @Getter
+    final PublishingQueue<R> queue;
 
     private final AtomicLong sendSuccess = new AtomicLong();
     private final AtomicLong sendPartialSuccess = new AtomicLong();
@@ -55,7 +56,6 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
     private final AtomicLong totalSentBuffers = new AtomicLong();
 
     /**
-     *
      * @param agentContext
      * @param flow
      * @param checkpoints
@@ -72,7 +72,7 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
         this.queue = new PublishingQueue<>(flow, flow.getPublishQueueCapacity());
         this.sender = sender;
         this.checkpointer = new Checkpointer<>(this.flow, checkpoints);
-        this.name = getClass().getSimpleName() + "[" + flow.getId() +"]";
+        this.name = getClass().getSimpleName() + "[" + flow.getId() + "]";
     }
 
     public String name() {
@@ -88,10 +88,11 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
     /**
      * Returns immediately if the record could not be published because the
      * queue is full (or if publisher is shutting down).
+     *
      * @param record
      * @param block
      * @return {@code true} if the record was successfully added to the
-     *         current buffer, and {@code false} otherwise.
+     * current buffer, and {@code false} otherwise.
      */
     public boolean publishRecord(R record) {
         if (isOpen && queue.offerRecord(record, false)) {
@@ -125,18 +126,18 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
         BufferSendResult<R> result = null;
         try {
             result = sender.sendBuffer(buffer);
-        } catch(Throwable t) {
+        } catch (Throwable t) {
             onSendError(buffer, t);
             return;
         }
         totalSentBuffers.incrementAndGet();
-        switch(result.getStatus()) {
-        case SUCCESS:
-            onSendSuccess(buffer);
-            break;
-        case PARTIAL_SUCCESS:
-            onSendPartialSuccess(buffer, result);
-            break;
+        switch (result.getStatus()) {
+            case SUCCESS:
+                onSendSuccess(buffer);
+                break;
+            case PARTIAL_SUCCESS:
+                onSendPartialSuccess(buffer, result);
+                break;
         }
     }
 
@@ -170,7 +171,7 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
         logger.trace("{}:{} Send SUCCESS", name(), buffer);
         try {
             checkpointer.saveCheckpoint(buffer);
-        } catch(Exception e) {
+        } catch (Exception e) {
             logger.error("{}:{} Error in onSendSuccess", name(), buffer, e);
         }
     }
@@ -181,7 +182,7 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
      * @param buffer
      * @param result
      * @return {@code true} if buffer was requed for retrying, {@code false}
-     *         if not for any reason (e.g. queue is closed).
+     * if not for any reason (e.g. queue is closed).
      */
     protected boolean onSendPartialSuccess(RecordBuffer<R> buffer, BufferSendResult<R> result) {
         sendPartialSuccess.incrementAndGet();
@@ -196,13 +197,13 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
      * @param buffer
      * @param t
      * @return {@code true} if buffer was requed for retrying, {@code false}
-     *         if not for any reason (e.g. queue is closed, error is
-     *         non-retriable).
+     * if not for any reason (e.g. queue is closed, error is
+     * non-retriable).
      */
     protected boolean onSendError(RecordBuffer<R> buffer, Throwable t) {
         sendError.incrementAndGet();
         // Retry the buffer if it's a runtime exception
-        if(isRetriableSendException(t)) {
+        if (isRetriableSendException(t)) {
             logger.error("{}:{} Retriable send error ({}: {}). Will retry.", name(), buffer, t.getClass().getName(), t.getMessage());
             return queueBufferForRetry(buffer);
         } else {
@@ -234,9 +235,9 @@ class SimplePublisher<R extends IRecord> implements IHeartbeatProvider {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getSimpleName())
-          .append("(")
-          .append("queue=").append(queue)
-          .append(")");
+                .append("(")
+                .append("queue=").append(queue)
+                .append(")");
         return sb.toString();
     }
 

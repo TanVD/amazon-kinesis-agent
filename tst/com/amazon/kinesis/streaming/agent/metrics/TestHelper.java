@@ -9,11 +9,11 @@ import com.amazonaws.services.cloudwatch.model.StatisticSet;
 
 public class TestHelper {
     public static MetricDatum constructDatum(String name,
-            StandardUnit unit,
-            double maximum,
-            double minimum,
-            double sum,
-            double count) {
+                                             StandardUnit unit,
+                                             double maximum,
+                                             double minimum,
+                                             double sum,
+                                             double count) {
         return new MetricDatum().withMetricName(name)
                 .withUnit(unit)
                 .withStatisticValues(new StatisticSet().withMaximum(maximum)

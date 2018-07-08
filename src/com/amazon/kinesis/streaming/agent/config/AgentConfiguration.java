@@ -1,27 +1,27 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.config;
+
+import com.amazonaws.ClientConfiguration;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.amazonaws.ClientConfiguration;
-
 public class AgentConfiguration extends Configuration {
-    static final String[] VALID_LOG_LEVELS = { "TRACE", "DEBUG", "INFO", "WARN", "ERROR" };
+    static final String[] VALID_LOG_LEVELS = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR"};
     static final long DEFAULT_SENDING_THREADS_KEEPALIVE_MILLIS = 60_000L;
     static final int DEFAULT_SENDING_THREADS_MAX_QUEUE_SIZE = 100;
     static final String DEFAULT_CHECKPOINTS_FILE = "/var/run/aws-kinesis-agent/checkpoints";
@@ -35,8 +35,8 @@ public class AgentConfiguration extends Configuration {
     static final boolean DEFAULT_LOG_EMIT_INTERNAL_METRICS = false;
     static final int DEFAULT_LOG_STATUS_REPORTING_PERIOD_SECONDS = 30;
     static final int DEFAULT_CHECKPOINT_TTL_DAYS = 7;
-    protected static final int DEFAULT_ASSUME_ROLE_DURATION_SECONDS = 
-    		(int) TimeUnit.HOURS.toSeconds(1);
+    protected static final int DEFAULT_ASSUME_ROLE_DURATION_SECONDS =
+            (int) TimeUnit.HOURS.toSeconds(1);
 
     // NOTE: If changing the default make sure to change SHUTDOWN_TIME variable in `bin/aws-kinesis-agent` as well...
     static final long DEFAULT_SHUTDOWN_TIMEOUT_MILLIS = 10_000L;
@@ -109,7 +109,7 @@ public class AgentConfiguration extends Configuration {
         return this.readBoolean("cloudwatch.emitMetrics",
                 DEFAULT_CW_EMIT_METRICS);
     }
-    
+
     public boolean cloudwatchTagInstance() {
         return this.readBoolean("cloudwatch.tagInstance",
                 DEFAULT_CW_TAG_INSTANCE);
@@ -191,20 +191,20 @@ public class AgentConfiguration extends Configuration {
         return this.readInteger("checkpointTimeToLiveDays",
                 DEFAULT_CHECKPOINT_TTL_DAYS);
     }
-    
+
     public String kinesisEndpoint() {
-    	return this.readString("kinesis." + ENDPOINT_KEY, null);
+        return this.readString("kinesis." + ENDPOINT_KEY, null);
     }
-    
+
     public String firehoseEndpoint() {
         return this.readString("firehose." + ENDPOINT_KEY, null);
     }
-    
+
     public String cloudwatchEndpoint() {
         return this.readString("cloudwatch." + ENDPOINT_KEY, null);
     }
-    
+
     public String stsEndpoint() {
-    	return this.readString("sts." + ENDPOINT_KEY, null);
+        return this.readString("sts." + ENDPOINT_KEY, null);
     }
 }

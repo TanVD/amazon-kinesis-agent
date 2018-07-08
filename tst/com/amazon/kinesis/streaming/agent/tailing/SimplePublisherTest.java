@@ -3,14 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-
-import java.io.IOException;
-
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseRecord;
@@ -19,8 +11,15 @@ import com.amazon.kinesis.streaming.agent.tailing.SimplePublisher;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.FileCheckpointStore;
 import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpointStore;
 import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender;
-import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
 import com.amazon.kinesis.streaming.agent.tailing.testing.FileSender.FileSenderFactory;
+import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 
 public class SimplePublisherTest extends TailingTestBase {
@@ -49,7 +48,7 @@ public class SimplePublisherTest extends TailingTestBase {
         assertFalse(publisher.publishRecord(getTestRecord(flow)));
     }
 
-    @Test(enabled=false)
+    @Test(enabled = false)
     public void testPollNextRecordReturnsImmediatelyAfterClose() {
         // TODO
     }

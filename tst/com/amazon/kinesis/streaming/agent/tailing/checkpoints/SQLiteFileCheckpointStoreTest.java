@@ -3,23 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing.checkpoints;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.commons.lang3.RandomStringUtils;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
@@ -32,6 +15,22 @@ import com.amazon.kinesis.streaming.agent.tailing.checkpoints.SQLiteFileCheckpoi
 import com.amazon.kinesis.streaming.agent.tailing.testing.TailingTestBase;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SQLiteFileCheckpointStoreTest extends TailingTestBase {
     private AgentContext context;
@@ -42,7 +41,7 @@ public class SQLiteFileCheckpointStoreTest extends TailingTestBase {
     }
 
     protected FileFlow<?> getTestFlow(String flow, String file) {
-        Configuration config = TestUtils.getTestConfiguration(new Object[][] { {"filePattern", file + "*"}, {FirehoseConstants.DESTINATION_KEY, flow} });
+        Configuration config = TestUtils.getTestConfiguration(new Object[][]{{"filePattern", file + "*"}, {FirehoseConstants.DESTINATION_KEY, flow}});
         return new FirehoseFileFlow(context, config);
     }
 
@@ -69,14 +68,14 @@ public class SQLiteFileCheckpointStoreTest extends TailingTestBase {
 
     @DataProvider(name = "saveCheckpointThenRetrieveIt")
     public Object[][] testSaveCheckpointThenRetrieveItData() {
-        return new Object[][] { { "testflow1", globalTestFiles.createTempFile().toString(), 123 },
-                { RandomStringUtils.random(25), globalTestFiles.createTempFile().toString(), 123 },
-                { "testflow2", globalTestFiles.createTempFile().toString(), 0 },
-                { RandomStringUtils.random(10), globalTestFiles.createTempFile().toString(), 0 },
+        return new Object[][]{{"testflow1", globalTestFiles.createTempFile().toString(), 123},
+                {RandomStringUtils.random(25), globalTestFiles.createTempFile().toString(), 123},
+                {"testflow2", globalTestFiles.createTempFile().toString(), 0},
+                {RandomStringUtils.random(10), globalTestFiles.createTempFile().toString(), 0},
                 // test that large values that don't fit in Integer work well
-                { "testflow3", globalTestFiles.createTempFile().toString(), 10_000_000_000L },
+                {"testflow3", globalTestFiles.createTempFile().toString(), 10_000_000_000L},
                 // test that long flow names work
-                { Strings.repeat("testflow3", 1000), globalTestFiles.createTempFile().toString(), 10_000_000_000L }, };
+                {Strings.repeat("testflow3", 1000), globalTestFiles.createTempFile().toString(), 10_000_000_000L},};
     }
 
     @Test(dataProvider = "saveCheckpointThenRetrieveIt")
@@ -88,7 +87,7 @@ public class SQLiteFileCheckpointStoreTest extends TailingTestBase {
         Assert.assertEquals(cp2, cp);
     }
 
-    @Test(invocationCount=5, skipFailedInvocations=true)
+    @Test(invocationCount = 5, skipFailedInvocations = true)
     public void testSaveCheckpointThenRetrieveItByFlow() throws Exception {
         FileCheckpointStore store = getTestCheckpointStore();
         final String filePrefix = "logfile";
@@ -170,16 +169,16 @@ public class SQLiteFileCheckpointStoreTest extends TailingTestBase {
 
         FileCheckpoint[] checkpoints = new FileCheckpoint[4];
         // create checkpoints
-        for(int i = 0; i < 4; ++i){
+        for (int i = 0; i < 4; ++i) {
             tmpFiles[i] = testFiles.createTempFile();
-            flows[i] = getTestFlow("flow"+i, tmpFiles[i].toString());
-            checkpoints[i] = store.saveCheckpoint(new TrackedFile(flows[i], tmpFiles[i]), 1000L + i^2);
+            flows[i] = getTestFlow("flow" + i, tmpFiles[i].toString());
+            checkpoints[i] = store.saveCheckpoint(new TrackedFile(flows[i], tmpFiles[i]), 1000L + i ^ 2);
         }
         // change the timestamp on half the checkpoints
         PreparedStatement update = store.connection.prepareStatement(
                 "update FILE_CHECKPOINTS " +
-                "set lastUpdated = datetime(?) " +
-                "where flow=?");
+                        "set lastUpdated = datetime(?) " +
+                        "where flow=?");
         // try a very old date (>1 year as of writing)
         update.setString(1, "2014-01-01");
         update.setString(2, flows[0].getId());

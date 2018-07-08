@@ -1,23 +1,22 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.config;
 
-import java.util.Map;
+import com.google.common.base.Function;
 
 import javax.annotation.Nullable;
-
-import com.google.common.base.Function;
+import java.util.Map;
 
 /**
  * Function that converts an object into a {@link Configuration}.
@@ -29,7 +28,7 @@ class ConfigurationConverter implements Function<Object, Configuration> {
     @Nullable
     public Configuration apply(@Nullable Object input) {
         if (input != null && !(input instanceof Configuration)) {
-            if(input instanceof Map)
+            if (input instanceof Map)
                 return new Configuration((Map<String, Object>) input);
             else
                 throw new ConfigurationException("Value is not a valid map: " + input.toString());

@@ -1,17 +1,24 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
+
+import com.amazon.kinesis.streaming.agent.AgentContext;
+import com.amazon.kinesis.streaming.agent.IHeartbeatProvider;
+import com.amazon.kinesis.streaming.agent.Logging;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -22,46 +29,38 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.slf4j.Logger;
-
-import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.IHeartbeatProvider;
-import com.amazon.kinesis.streaming.agent.Logging;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-
 /**
  * A queue that keeps track of record buffers (aka batches) ready for
  * publishing. It tracks buffers that were never published (the
  * "never-published queue") as well as buffers that were previously published
  * unsuccessfully and are slated for a retry (the "retry queue").
- *
+ * <p>
  * Buffers in the "retry queue" are always given priority over those in the
  * "never-published queue" when polling. Specifically, {@link #take()} returns
  * any buffers in the retry-queue immediately (or as they become available).
- *
+ * <p>
  * New records (added via {@link #offerRecord(IRecord)}) are kept in a temporary
  * buffer until it "matures" (based on implementation-specific policy and/or
  * configuration, such as maximum time or maximum age), at which time it's
  * pushed into the bounded "never-published queue".
- *
+ * <p>
  * A buffer "matures" (and is queued for processing) based on any one of the
  * following three criteria:
  * <ul>
- *   <li>Number of records in temporary buffer: cannot exceed value set by
- *       {@link FileFlow#getMaxBufferSizeRecords()}.</li>
- *   <li>Size of the temporary buffer (in bytes): cannot exceed value set by
- *       {@link FileFlow#getMaxBufferSizeBytes()}.</li>
- *   <li>Age of the buffer (time since first record was added): this class will
- *       try to maintain it below the value set by
- *       {@link FileFlow#getMaxBufferAgeMillis()}; however this is only checked
- *       before/after buffers are removed from the queue (in calls to
- *       {@link #take()} and {@link #tryTake()}) or with an explicit call to
- *       {@link #checkPendingRecords()} because for a consumer the behavior is
- *       the same. If {@link #offerRecord(IRecord) offerRecord} was called at least
- *       once and no calls to {@link #take()}/{@link #tryTake()}/
- *       {@link #checkPendingRecords()} followed, the buffer age can grow
- *       indefinitely.</li>
+ * <li>Number of records in temporary buffer: cannot exceed value set by
+ * {@link FileFlow#getMaxBufferSizeRecords()}.</li>
+ * <li>Size of the temporary buffer (in bytes): cannot exceed value set by
+ * {@link FileFlow#getMaxBufferSizeBytes()}.</li>
+ * <li>Age of the buffer (time since first record was added): this class will
+ * try to maintain it below the value set by
+ * {@link FileFlow#getMaxBufferAgeMillis()}; however this is only checked
+ * before/after buffers are removed from the queue (in calls to
+ * {@link #take()} and {@link #tryTake()}) or with an explicit call to
+ * {@link #checkPendingRecords()} because for a consumer the behavior is
+ * the same. If {@link #offerRecord(IRecord) offerRecord} was called at least
+ * once and no calls to {@link #take()}/{@link #tryTake()}/
+ * {@link #checkPendingRecords()} followed, the buffer age can grow
+ * indefinitely.</li>
  * </ul>
  *
  * @param <R> The record type.
@@ -94,7 +93,9 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
     // TODO: time a buffer spends in the queue
     //private final AtomicLong totalTimeInQueue = new AtomicLong(0);
 
-    /** Where records are held before being queued, a.k.a. temporary buffer. */
+    /**
+     * Where records are held before being queued, a.k.a. temporary buffer.
+     */
     private RecordBuffer<R> currentBuffer;
 
     public PublishingQueue(
@@ -108,7 +109,7 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
         this.retryQueue = new LinkedList<>();
         this.lock = new ReentrantLock();
         this.notEmpty = lock.newCondition();
-        this.notFull =  lock.newCondition();
+        this.notFull = lock.newCondition();
         this.currentBuffer = new RecordBuffer<>(flow);
     }
 
@@ -156,7 +157,7 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
                 return false;
             // Check if we need to publish before this record, and then proceed
             if (checkPendingRecordsBeforeNewRecord(record, block)) {
-                if(LOGGER.isDebugEnabled()) {
+                if (LOGGER.isDebugEnabled()) {
                     // SANITYCHECK: TODO: Remove when done debugging.
                     Preconditions.checkState(currentBuffer.sizeRecords() < flow.getMaxBufferSizeRecords());
                     Preconditions.checkState(currentBuffer.sizeBytesWithOverhead() + record.lengthWithOverhead() <= flow.getMaxBufferSizeBytes());
@@ -191,7 +192,7 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
     public RecordBuffer<R> peek() {
         lock.lock();
         try {
-            if(!retryQueue.isEmpty()) {
+            if (!retryQueue.isEmpty()) {
                 return retryQueue.peek();
             } else {
                 return neverPubQueue.peek();
@@ -203,6 +204,7 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
 
     /**
      * Keep private. Call only when holding lock.
+     *
      * @param elapsedWaiting
      * @return
      */
@@ -264,18 +266,19 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
 
     /**
      * Keep private. Call only when holding lock.
+     *
      * @return
      */
     private RecordBuffer<R> tryTake(long elapsedWaiting) {
         RecordBuffer<R> result = null;
-        if(!retryQueue.isEmpty()) {
+        if (!retryQueue.isEmpty()) {
             result = retryQueue.poll();
             //LOGGER.trace("{}:{} Polled from retry queue.", name, result);
         } else {
             result = neverPubQueue.poll();
             //LOGGER.trace("{}:{} Polled from never-published queue.", name, result);
         }
-        if(result != null) {
+        if (result != null) {
             return onTakeSuccess(result, elapsedWaiting);
         } else if (elapsedWaiting > 0) {
             return onTakeTimeout(elapsedWaiting);
@@ -316,6 +319,7 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
 
     /**
      * Keep private. Call only when holding lock.
+     *
      * @param buffer
      * @param elapsed
      * @return
@@ -330,6 +334,7 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
 
     /**
      * Keep private. Call only when holding lock.
+     *
      * @param buffer
      * @param elapsed
      * @return
@@ -374,16 +379,16 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
 
     /**
      * @return {@code true} either if the temp buffer does not need to be queued
-     *         or if was queued successfully, and {@code false} if it needed to
-     *         be queued, but could not for any reason.
+     * or if was queued successfully, and {@code false} if it needed to
+     * be queued, but could not for any reason.
      */
     public boolean checkPendingRecords() {
         lock.lock();
         try {
             if (!currentBuffer.isEmpty() &&
                     (currentBuffer.sizeBytesWithOverhead() >= flow.getMaxBufferSizeBytes()
-                    || currentBuffer.sizeRecords() >= flow.getMaxBufferSizeRecords()
-                    || currentBuffer.age() >= flow.getMaxBufferAgeMillis())) {
+                            || currentBuffer.sizeRecords() >= flow.getMaxBufferSizeRecords()
+                            || currentBuffer.age() >= flow.getMaxBufferAgeMillis())) {
                 return queueCurrentBuffer(false);
             } else
                 return true;
@@ -480,16 +485,16 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
      * @param record
      * @param block
      * @return {@code true} either if the temp buffer does not need to be queued
-     *         or if was queued successfully, and {@code false} if it needed to
-     *         be queued, but could not for any reason.
+     * or if was queued successfully, and {@code false} if it needed to
+     * be queued, but could not for any reason.
      */
     private boolean checkPendingRecordsBeforeNewRecord(R record, boolean block) {
         lock.lock();
         try {
             if (!currentBuffer.isEmpty() && (
                     currentBuffer.sizeBytesWithOverhead() + flow.getPerBufferOverheadBytes() + record.lengthWithOverhead() > flow.getMaxBufferSizeBytes()
-                    || currentBuffer.sizeRecords() >= flow.getMaxBufferSizeRecords())
-            ) {
+                            || currentBuffer.sizeRecords() >= flow.getMaxBufferSizeRecords())
+                    ) {
                 return queueCurrentBuffer(block);
             } else
                 return true;
@@ -509,15 +514,15 @@ public final class PublishingQueue<R extends IRecord> implements IHeartbeatProvi
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append(getClass().getSimpleName())
-          .append("(neverPubQueueSize=").append(neverPubQueue.size())
-          //.append(",neverPubQueueCapacity=").append(neverPubCapacity)
-          .append(",retryQueueSize=").append(retryQueue.size())
-          .append(",totalRecords=").append(totalRecords())
-          //.append(",totalBytes=").append(totalBytes())
-          .append(",pendingRecords=").append(pendingRecords())
-          //.append(",pendingBytes=").append(pendingBytes())
-          //.append(",flow=").append(flow.getId())
-          .append(")");
+                .append("(neverPubQueueSize=").append(neverPubQueue.size())
+                //.append(",neverPubQueueCapacity=").append(neverPubCapacity)
+                .append(",retryQueueSize=").append(retryQueue.size())
+                .append(",totalRecords=").append(totalRecords())
+                //.append(",totalBytes=").append(totalBytes())
+                .append(",pendingRecords=").append(pendingRecords())
+                //.append(",pendingBytes=").append(pendingBytes())
+                //.append(",flow=").append(flow.getId())
+                .append(")");
         return sb.toString();
     }
 

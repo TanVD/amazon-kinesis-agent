@@ -3,16 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.metrics;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.metrics.CWMetricKey;
 import com.amazon.kinesis.streaming.agent.metrics.DefaultCWMetricsPublisher;
 import com.amazon.kinesis.streaming.agent.metrics.MetricDatumWithKey;
@@ -21,6 +11,15 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.model.MetricDatum;
 import com.amazonaws.services.cloudwatch.model.PutMetricDataRequest;
 import com.amazonaws.services.cloudwatch.model.StandardUnit;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class DefaultCWMetricsPublisherTest extends TestBase {
 

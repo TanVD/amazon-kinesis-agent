@@ -3,19 +3,6 @@
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertNull;
-
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.config.ConfigurationException;
@@ -23,12 +10,22 @@ import com.amazon.kinesis.streaming.agent.processing.processors.AgentDataConvert
 import com.amazon.kinesis.streaming.agent.processing.processors.CSVToJSONDataConverter;
 import com.amazon.kinesis.streaming.agent.processing.processors.SingleLineDataConverter;
 import com.amazon.kinesis.streaming.agent.tailing.FileFlow;
+import com.amazon.kinesis.streaming.agent.tailing.FileFlow.InitialPosition;
 import com.amazon.kinesis.streaming.agent.tailing.FirehoseFileFlow;
 import com.amazon.kinesis.streaming.agent.tailing.RegexSplitter;
 import com.amazon.kinesis.streaming.agent.tailing.SingleLineSplitter;
-import com.amazon.kinesis.streaming.agent.tailing.FileFlow.InitialPosition;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.testng.Assert.assertNull;
 
 @SuppressWarnings("rawtypes")
 public abstract class FileFlowTest<F extends FileFlow> extends TestBase {
@@ -57,8 +54,8 @@ public abstract class FileFlowTest<F extends FileFlow> extends TestBase {
         configMap.put("skipHeaderLines", 5);
         configMap.put("truncatedRecordTerminator", "\nEOE\n");
         configMap.put("dataProcessingOptions", Arrays.asList(new Configuration(new HashMap<String, Object>() {{
-                      put("optionName", "SINGLELINE");
-                  }})));
+            put("optionName", "SINGLELINE");
+        }})));
         AgentContext context = TestUtils.getTestAgentContext();
         F ff = buildFileFlow(context, new Configuration(configMap));
         assertEquals(ff.getSourceFile().getDirectory(), Paths.get("/tmp"));
@@ -88,7 +85,7 @@ public abstract class FileFlowTest<F extends FileFlow> extends TestBase {
         assertEquals(ff.getRecordTerminatorBytes(), "\n".getBytes(StandardCharsets.UTF_8));
         assertNull(ff.getDataConverter());
     }
-    
+
     @SuppressWarnings("serial")
     @Test
     public void testDataConversionOptions() {
@@ -116,30 +113,30 @@ public abstract class FileFlowTest<F extends FileFlow> extends TestBase {
         assertEquals(((AgentDataConverterChain) ff2.getDataConverter()).getDataConverters().get(0).getClass(), SingleLineDataConverter.class);
         assertEquals(((AgentDataConverterChain) ff2.getDataConverter()).getDataConverters().get(1).getClass(), CSVToJSONDataConverter.class);
     }
-    
-    @DataProvider(name="badDataConversionOptionInConfig")
-    public Object[][] testDataConversionInConfigData(){
-        return new Object[][] { 
-                { new Configuration[] {new Configuration(new HashMap<String, Object>() {{
+
+    @DataProvider(name = "badDataConversionOptionInConfig")
+    public Object[][] testDataConversionInConfigData() {
+        return new Object[][]{
+                {new Configuration[]{new Configuration(new HashMap<String, Object>() {{
                     put("optionName", "SINGLELINE");
                 }}), new Configuration(new HashMap<String, Object>() {{
                     put("optionName", "UNSUPPORTED");
-                }})} }, 
-                { new Configuration[] {new Configuration(new HashMap<String, Object>() {{
+                }})}},
+                {new Configuration[]{new Configuration(new HashMap<String, Object>() {{
                     put("optionName", "singleline");
-                }})} }, 
-                { new Configuration[] {new Configuration(new HashMap<String, Object>() {{
+                }})}},
+                {new Configuration[]{new Configuration(new HashMap<String, Object>() {{
                     put("optionName", "");
-                }})} },
-                { new Configuration[] {new Configuration(new HashMap<String, Object>() {{
+                }})}},
+                {new Configuration[]{new Configuration(new HashMap<String, Object>() {{
                     put("optionName1", "SINGLELINE");
-                }})} } 
-               };
+                }})}}
+        };
     }
-    
+
     @SuppressWarnings("serial")
-    @Test(dataProvider="badDataConversionOptionInConfig",
-            expectedExceptions=ConfigurationException.class)
+    @Test(dataProvider = "badDataConversionOptionInConfig",
+            expectedExceptions = ConfigurationException.class)
     public void testWrongDataConversionOption(final Configuration[] dataConversionOptions) {
         AgentContext context = TestUtils.getTestAgentContext();
         final String file = "/var/log/message*";
@@ -153,18 +150,18 @@ public abstract class FileFlowTest<F extends FileFlow> extends TestBase {
 
     // The data sources below use Firehose constants by default, 
     // any other concrete file flows should override the sources
-    
-    @DataProvider(name="badMaxBufferAgeMillisInConfig")
-    public Object[][] testMaxBufferAgeMillisInConfigData(){
-        return new Object[][] { { 0 }, { -1 },
-                { FirehoseFileFlow.VALID_MAX_BUFFER_AGE_RANGE_MILLIS.lowerEndpoint() - 1 },
-                { FirehoseFileFlow.VALID_MAX_BUFFER_AGE_RANGE_MILLIS.upperEndpoint() + 1 },
+
+    @DataProvider(name = "badMaxBufferAgeMillisInConfig")
+    public Object[][] testMaxBufferAgeMillisInConfigData() {
+        return new Object[][]{{0}, {-1},
+                {FirehoseFileFlow.VALID_MAX_BUFFER_AGE_RANGE_MILLIS.lowerEndpoint() - 1},
+                {FirehoseFileFlow.VALID_MAX_BUFFER_AGE_RANGE_MILLIS.upperEndpoint() + 1},
         };
     }
 
-    @Test(dataProvider="badMaxBufferAgeMillisInConfig",
-            expectedExceptions=ConfigurationException.class,
-            expectedExceptionsMessageRegExp=".*maxBufferAgeMillis.*outside of valid range.*")
+    @Test(dataProvider = "badMaxBufferAgeMillisInConfig",
+            expectedExceptions = ConfigurationException.class,
+            expectedExceptionsMessageRegExp = ".*maxBufferAgeMillis.*outside of valid range.*")
     public void testBadMaxBufferAgeMillisInConfig(long maxBufferAgeMillis) {
         Map<String, Object> configMap = new HashMap<>();
         configMap.put("filePattern", "/tmp/testfile.log.*");
@@ -174,17 +171,17 @@ public abstract class FileFlowTest<F extends FileFlow> extends TestBase {
         buildFileFlow(context, new Configuration(configMap));
     }
 
-    @DataProvider(name="badMaxBufferSizeRecordsInConfig")
-    public Object[][] testBadMaxBufferSizeRecordsInConfigData(){
-        return new Object[][] { { 0 }, { -1 },
-                { FirehoseFileFlow.VALID_MAX_BUFFER_SIZE_RECORDS_RANGE.lowerEndpoint() - 1 },
-                { FirehoseFileFlow.VALID_MAX_BUFFER_SIZE_RECORDS_RANGE.upperEndpoint() + 1 },
+    @DataProvider(name = "badMaxBufferSizeRecordsInConfig")
+    public Object[][] testBadMaxBufferSizeRecordsInConfigData() {
+        return new Object[][]{{0}, {-1},
+                {FirehoseFileFlow.VALID_MAX_BUFFER_SIZE_RECORDS_RANGE.lowerEndpoint() - 1},
+                {FirehoseFileFlow.VALID_MAX_BUFFER_SIZE_RECORDS_RANGE.upperEndpoint() + 1},
         };
     }
 
-    @Test(dataProvider="badMaxBufferSizeRecordsInConfig",
-            expectedExceptions=ConfigurationException.class,
-            expectedExceptionsMessageRegExp=".*maxBufferSizeRecords.*outside of valid range.*")
+    @Test(dataProvider = "badMaxBufferSizeRecordsInConfig",
+            expectedExceptions = ConfigurationException.class,
+            expectedExceptionsMessageRegExp = ".*maxBufferSizeRecords.*outside of valid range.*")
     public void testBadMaxBufferSizeRecordsInConfig(long maxBufferSizeRecords) {
         Map<String, Object> configMap = new HashMap<>();
         configMap.put("filePattern", "/tmp/testfile.log.*");
@@ -194,17 +191,17 @@ public abstract class FileFlowTest<F extends FileFlow> extends TestBase {
         buildFileFlow(context, new Configuration(configMap));
     }
 
-    @DataProvider(name="badMaxBufferSizeBytesInConfig")
-    public Object[][] testMaxBufferSizeBytesInConfigData(){
-        return new Object[][] { { 0 }, { -1 },
-                { FirehoseFileFlow.VALID_MAX_BUFFER_SIZE_BYTES_RANGE.lowerEndpoint() - 1 },
-                { FirehoseFileFlow.VALID_MAX_BUFFER_SIZE_BYTES_RANGE.upperEndpoint() + 1 },
+    @DataProvider(name = "badMaxBufferSizeBytesInConfig")
+    public Object[][] testMaxBufferSizeBytesInConfigData() {
+        return new Object[][]{{0}, {-1},
+                {FirehoseFileFlow.VALID_MAX_BUFFER_SIZE_BYTES_RANGE.lowerEndpoint() - 1},
+                {FirehoseFileFlow.VALID_MAX_BUFFER_SIZE_BYTES_RANGE.upperEndpoint() + 1},
         };
     }
 
-    @Test(dataProvider="badMaxBufferSizeBytesInConfig",
-            expectedExceptions=ConfigurationException.class,
-            expectedExceptionsMessageRegExp=".*maxBufferSizeBytes.*outside of valid range.*")
+    @Test(dataProvider = "badMaxBufferSizeBytesInConfig",
+            expectedExceptions = ConfigurationException.class,
+            expectedExceptionsMessageRegExp = ".*maxBufferSizeBytes.*outside of valid range.*")
     public void testMaxBufferSizeBytesInConfig(long maxBufferSizeBytes) {
         Map<String, Object> configMap = new HashMap<>();
         configMap.put("filePattern", "/tmp/testfile.log.*");
@@ -250,11 +247,12 @@ public abstract class FileFlowTest<F extends FileFlow> extends TestBase {
         assertEquals(ff2.getRecordSplitter().getClass(), SingleLineSplitter.class);
     }
 
-    @Test(enabled=false)
+    @Test(enabled = false)
     public void testCreateFileTailer() {
         // TODO
     }
-    
+
     protected abstract String getDestinationKey();
+
     protected abstract F buildFileFlow(AgentContext context, Configuration config);
 }

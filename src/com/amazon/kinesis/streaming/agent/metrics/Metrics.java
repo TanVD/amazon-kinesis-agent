@@ -1,25 +1,25 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.metrics;
+
+import com.amazon.kinesis.streaming.agent.AgentContext;
+import com.amazon.kinesis.streaming.agent.tailing.FirehoseConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import com.amazon.kinesis.streaming.agent.AgentContext;
-import com.amazon.kinesis.streaming.agent.tailing.FirehoseConstants;
 
 public class Metrics implements IMetricsContext {
     // TODO: uncouple from FirehoseConstants
@@ -60,9 +60,9 @@ public class Metrics implements IMetricsContext {
             factories.add(cwFactory);
         }
 
-        if(factories.size() == 0) {
+        if (factories.size() == 0) {
             factory = new NullMetricsFactory();
-        } else if(factories.size() == 1) {
+        } else if (factories.size() == 1) {
             factory = factories.get(0);
         } else {
             factory = new CompositeMetricsFactory(factories);
@@ -91,7 +91,7 @@ public class Metrics implements IMetricsContext {
             return fallback;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     public static <T> T getMetric(Map<String, Object> metrics, String key, T fallback) {
         T val = (T) metrics.get(key);
         if (val != null)

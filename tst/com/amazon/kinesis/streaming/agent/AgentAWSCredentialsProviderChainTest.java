@@ -3,17 +3,16 @@
  */
 package com.amazon.kinesis.streaming.agent;
 
-import java.util.HashMap;
-
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.config.AgentConfiguration;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils.TestBase;
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import java.util.HashMap;
 
 public class AgentAWSCredentialsProviderChainTest extends TestBase {
     @Test
@@ -36,7 +35,7 @@ public class AgentAWSCredentialsProviderChainTest extends TestBase {
             Assert.assertEquals(credentialsProvider.getCredentials().getAWSAccessKeyId(), "PROPERTY_ACCESS_ID");
             Assert.assertEquals(credentialsProvider.getCredentials().getAWSSecretKey(), "PROPERTY_SECRET_KEY");
         } finally {
-         // set the system properties back after testing
+            // set the system properties back after testing
             if (originAccessKeyProperty != null)
                 System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, originAccessKeyProperty);
             if (originSecretKeyProperty != null)
@@ -44,7 +43,7 @@ public class AgentAWSCredentialsProviderChainTest extends TestBase {
         }
     }
 
-    private AWSCredentialsProvider getCredentialsProviderByKeyPair (final String accessKeyId, final String secretKey) {
+    private AWSCredentialsProvider getCredentialsProviderByKeyPair(final String accessKeyId, final String secretKey) {
         @SuppressWarnings("serial")
         AgentContext context = TestUtils.getTestAgentContext(new HashMap<String, Object>() {{
             put(AgentConfiguration.CONFIG_ACCESS_KEY, accessKeyId);

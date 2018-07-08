@@ -3,22 +3,19 @@
  */
 package com.amazon.kinesis.streaming.agent;
 
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.testng.annotations.Test;
-
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.config.Configuration;
 import com.amazon.kinesis.streaming.agent.testing.TestUtils;
 import com.amazonaws.ClientConfiguration;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 public class AgentContextTest {
 
@@ -45,7 +42,7 @@ public class AgentContextTest {
         String userAgent = context.userAgent(config);
         assertTrue(userAgent.startsWith(AgentContext.DEFAULT_USER_AGENT + "/0.1"));
     }
-    
+
     @Test
     public void testInstanceTag() throws IOException {
         AgentContext context = new AgentContext(getTestConfiguration("agentconfig1.json"));
@@ -55,7 +52,7 @@ public class AgentContextTest {
 
     @Test
     public void testCustomUserAgent() throws IOException {
-        AgentContext context = new AgentContext(TestUtils.getTestConfiguration(new Object[] {"userAgent", "test-ua"}));
+        AgentContext context = new AgentContext(TestUtils.getTestConfiguration(new Object[]{"userAgent", "test-ua"}));
         context = spy(context);
         when(context.version()).thenReturn("0.1");
         ClientConfiguration config = new ClientConfiguration();
@@ -65,7 +62,7 @@ public class AgentContextTest {
 
     @Test
     public void testUserAgentOverride() throws IOException {
-        AgentContext context = new AgentContext(TestUtils.getTestConfiguration(new Object[] {"userAgentOverride", "test-ua"}));
+        AgentContext context = new AgentContext(TestUtils.getTestConfiguration(new Object[]{"userAgentOverride", "test-ua"}));
         ClientConfiguration config = new ClientConfiguration();
         assertEquals(context.userAgent(config), "test-ua");
     }

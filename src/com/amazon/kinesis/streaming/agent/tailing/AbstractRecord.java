@@ -1,28 +1,28 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-
 import com.amazon.kinesis.streaming.agent.ByteBuffers;
 import com.google.common.base.Preconditions;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Base implementation of an {@link IRecord} interface.
  */
-public abstract class AbstractRecord  implements IRecord {
+public abstract class AbstractRecord implements IRecord {
     protected boolean shouldSkip = false;
     protected final ByteBuffer data;
     protected final TrackedFile file;
@@ -46,7 +46,7 @@ public abstract class AbstractRecord  implements IRecord {
     public AbstractRecord(TrackedFile file, long offset, byte[] data, long originalLength) {
         this(file, offset, ByteBuffer.wrap(data), originalLength);
     }
-    
+
     @Override
     public long dataLength() {
         return data == null ? 0 : data.remaining();
@@ -76,16 +76,16 @@ public abstract class AbstractRecord  implements IRecord {
     public TrackedFile file() {
         return file;
     }
-    
+
     @Override
     public boolean shouldSkip() {
         return this.shouldSkip;
     }
-    
+
     public void skip() {
         this.shouldSkip = true;
     }
-    
+
     @Override
     public void truncate() {
         if (length() > file.getFlow().getMaxRecordSizeBytes()) {
@@ -113,20 +113,20 @@ public abstract class AbstractRecord  implements IRecord {
         if (strData.length() > 50)
             strData = strData.substring(0, 47) + "...";
         sb.append(getClass().getSimpleName())
-            .append("(file=").append(file)
-            .append(",startOffset=").append(startOffset)
-            .append(",endOffset=").append(endOffset())
-            .append(",length=").append(length())
-            .append(",lengthIncludingOverhead=").append(lengthWithOverhead())
-            .append(",data=(").append(strData).append(")")
-            .append(")");
+                .append("(file=").append(file)
+                .append(",startOffset=").append(startOffset)
+                .append(",endOffset=").append(endOffset())
+                .append(",length=").append(length())
+                .append(",lengthIncludingOverhead=").append(lengthWithOverhead())
+                .append(",data=(").append(strData).append(")")
+                .append(")");
         return sb.toString();
     }
-    
+
     /**
      * This size limit is used by {@link AbstractRecord#truncate()}
      * to truncate the data of the record to the limit
-     * 
+     *
      * @return max size of the data blob
      */
     protected abstract int getMaxDataSize();

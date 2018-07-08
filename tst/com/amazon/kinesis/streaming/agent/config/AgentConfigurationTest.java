@@ -3,21 +3,20 @@
  */
 package com.amazon.kinesis.streaming.agent.config;
 
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import com.amazon.kinesis.streaming.agent.config.AgentConfiguration;
+import com.amazon.kinesis.streaming.agent.config.Configuration;
+import com.amazonaws.ClientConfiguration;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import org.testng.util.Strings;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
 import java.util.Collections;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-import org.testng.util.Strings;
-
-import com.amazon.kinesis.streaming.agent.config.AgentConfiguration;
-import com.amazon.kinesis.streaming.agent.config.Configuration;
-import com.amazonaws.ClientConfiguration;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 public class AgentConfigurationTest {
 
@@ -30,7 +29,7 @@ public class AgentConfigurationTest {
 
     @Test
     public void testDefaultConfigs() {
-        AgentConfiguration config = new AgentConfiguration(Collections.<String, Object> emptyMap());
+        AgentConfiguration config = new AgentConfiguration(Collections.<String, Object>emptyMap());
         Assert.assertNull(config.accessKeyId());
         Assert.assertNull(config.secretKey());
         Assert.assertTrue(config.cloudwatchEmitMetrics());
@@ -81,7 +80,7 @@ public class AgentConfigurationTest {
 
     @Test
     public void testDefaultMaxSendingThreads() {
-        AgentConfiguration config = new AgentConfiguration(Collections.<String, Object> emptyMap());
+        AgentConfiguration config = new AgentConfiguration(Collections.<String, Object>emptyMap());
         int maxSendingThreadsPerCore = config.maxSendingThreadsPerCore();
         int numCores = Runtime.getRuntime().availableProcessors();
         Assert.assertEquals(config.defaultMaxSendingThreads(), numCores * maxSendingThreadsPerCore);
@@ -93,22 +92,22 @@ public class AgentConfigurationTest {
         int highMaxThreads = 2 * ClientConfiguration.DEFAULT_MAX_CONNECTIONS;
         int lowMaxThreads = ClientConfiguration.DEFAULT_MAX_CONNECTIONS / 2;
 
-        AgentConfiguration config = new AgentConfiguration(Collections.<String, Object> emptyMap());
+        AgentConfiguration config = new AgentConfiguration(Collections.<String, Object>emptyMap());
         config = spy(config);
         when(config.maxSendingThreads()).thenReturn(highMaxThreads);
         Assert.assertEquals(config.defaultMaxConnections(), highMaxThreads);
         Assert.assertEquals(config.maxConnections(), highMaxThreads);
 
-        config = new AgentConfiguration(Collections.<String, Object> emptyMap());
+        config = new AgentConfiguration(Collections.<String, Object>emptyMap());
         config = spy(config);
         when(config.maxSendingThreads()).thenReturn(lowMaxThreads);
         Assert.assertEquals(config.defaultMaxConnections(), ClientConfiguration.DEFAULT_MAX_CONNECTIONS);
         Assert.assertEquals(config.maxConnections(), ClientConfiguration.DEFAULT_MAX_CONNECTIONS);
     }
-    
+
     @Test
     public void testEndpointConfig() throws IOException {
-    	AgentConfiguration config = getTestConfiguration("agentconfig1.json");
+        AgentConfiguration config = getTestConfiguration("agentconfig1.json");
         Assert.assertEquals(config.firehoseEndpoint(), "https://firehose.us-east-1.amazonaws.com");
         Assert.assertTrue(Strings.isNullOrEmpty(config.kinesisEndpoint()));
         Assert.assertTrue(Strings.isNullOrEmpty(config.cloudwatchEndpoint()));

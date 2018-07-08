@@ -1,26 +1,17 @@
 /*
  * Copyright 2014-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- * 
+ *
  * Licensed under the Amazon Software License (the "License").
- * You may not use this file except in compliance with the License. 
+ * You may not use this file except in compliance with the License.
  * A copy of the License is located at
- * 
+ *
  *  http://aws.amazon.com/asl/
- *  
- * or in the "license" file accompanying this file. 
- * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ *
+ * or in the "license" file accompanying this file.
+ * This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and limitations under the License.
  */
 package com.amazon.kinesis.streaming.agent.tailing;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-
-import lombok.Getter;
 
 import com.amazon.kinesis.streaming.agent.AgentContext;
 import com.amazon.kinesis.streaming.agent.metrics.IMetricsScope;
@@ -36,6 +27,14 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
+import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class KinesisSender extends AbstractSender<KinesisRecord> {
     private static final String SERVICE_ERRORS_METRIC = "ServiceErrors";
@@ -45,7 +44,8 @@ public class KinesisSender extends AbstractSender<KinesisRecord> {
     private static final String RECORDS_SENT_METRIC = "RecordsSent";
     private static final String SENDER_NAME = "KinesisSender";
 
-    @Getter private final AgentContext agentContext;
+    @Getter
+    private final AgentContext agentContext;
     private final KinesisFileFlow flow;
 
     private final AtomicLong totalRecordsAttempted = new AtomicLong();
@@ -85,7 +85,7 @@ public class KinesisSender extends AbstractSender<KinesisRecord> {
         try {
             BufferSendResult<KinesisRecord> sendResult = null;
             List<PutRecordsRequestEntry> requestRecords = new ArrayList<>();
-            for(KinesisRecord data : buffer) {
+            for (KinesisRecord data : buffer) {
                 PutRecordsRequestEntry record = new PutRecordsRequestEntry();
                 record.setData(data.data());
                 record.setPartitionKey(data.partitionKey());
@@ -113,13 +113,13 @@ public class KinesisSender extends AbstractSender<KinesisRecord> {
             } finally {
                 totalPutRecordsLatency.addAndGet(timer.elapsed(TimeUnit.MILLISECONDS));
             }
-            if(sendResult == null) {
+            if (sendResult == null) {
                 List<Integer> sentRecords = new ArrayList<>(requestRecords.size());
-                Multiset<String> errors = HashMultiset.<String> create();
+                Multiset<String> errors = HashMultiset.<String>create();
                 int index = 0;
                 long totalBytesSent = 0;
                 for (final PutRecordsResultEntry responseEntry : result.getRecords()) {
-                	final PutRecordsRequestEntry record = requestRecords.get(index);
+                    final PutRecordsRequestEntry record = requestRecords.get(index);
                     if (responseEntry.getErrorCode() == null) {
                         sentRecords.add(index);
                         totalBytesSent += record.getData().limit();
@@ -130,7 +130,7 @@ public class KinesisSender extends AbstractSender<KinesisRecord> {
                     }
                     ++index;
                 }
-                if(sentRecords.size() == requestRecords.size()) {
+                if (sentRecords.size() == requestRecords.size()) {
                     sendResult = BufferSendResult.succeeded(buffer);
                 } else {
                     buffer = buffer.remove(sentRecords);
@@ -150,15 +150,15 @@ public class KinesisSender extends AbstractSender<KinesisRecord> {
                 totalRecordsSent.addAndGet(sentRecords.size());
                 totalRecordsFailed.addAndGet(failedRecordCount);
 
-                if(logger.isDebugEnabled() && !errors.isEmpty()) {
-                    synchronized(totalErrors) {
+                if (logger.isDebugEnabled() && !errors.isEmpty()) {
+                    synchronized (totalErrors) {
                         StringBuilder strErrors = new StringBuilder();
-                        for(Multiset.Entry<String> err : errors.entrySet()) {
+                        for (Multiset.Entry<String> err : errors.entrySet()) {
                             AtomicLong counter = totalErrors.get(err.getElement());
                             if (counter == null)
                                 totalErrors.put(err.getElement(), counter = new AtomicLong());
                             counter.addAndGet(err.getCount());
-                            if(strErrors.length() > 0)
+                            if (strErrors.length() > 0)
                                 strErrors.append(", ");
                             strErrors.append(err.getElement()).append(": ").append(err.getCount());
                         }
@@ -190,8 +190,8 @@ public class KinesisSender extends AbstractSender<KinesisRecord> {
             put(SENDER_NAME + ".TotalPutRecordsOtherErrors", totalPutRecordsOtherErrors);
             put(SENDER_NAME + ".TotalPutRecordsLatency", totalPutRecordsLatency);
             put(SENDER_NAME + ".ActivePutRecordsCalls", activePutRecordsCalls);
-            for(Map.Entry<String, AtomicLong> err : totalErrors.entrySet()) {
-                put(SENDER_NAME + ".Error(" + err.getKey() +")", err.getValue());
+            for (Map.Entry<String, AtomicLong> err : totalErrors.entrySet()) {
+                put(SENDER_NAME + ".Error(" + err.getKey() + ")", err.getValue());
             }
         }};
     }
